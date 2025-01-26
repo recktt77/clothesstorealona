@@ -1,22 +1,19 @@
 import React from "react";
 import * as ReactDOMClinet from 'react-dom/client';
+import NavBar from "./components/ui/navigation/navbar";
+import Main from "./components/ui/main/main";
 
-const inputClick = ()=>{
-  console.log("clicked")
+class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <NavBar />
+        <Main />
+      </div>
+    )
+  }
 }
-
-const mouseOver = () => {
-  console.log("Mouse over")
-}
-const helpText = "help text!"
-const elements = (
-  <div className="name">
-    <h1>{helpText}</h1>
-    <input placeholder={helpText} onClick={inputClick}  onMouseEnter={mouseOver}/>
-    <p>{helpText === "help text!" ? "yes": "no"}</p>
-  </div>
-)
 
 const app = ReactDOMClinet.createRoot(document.getElementById("app"))
 
-app.render(elements)
+app.render(<App />)
