@@ -1,19 +1,16 @@
 import React from "react";
 import * as ReactDOMClinet from 'react-dom/client';
-import NavBar from "./components/ui/navigation/navbar";
-import Main from "./components/ui/main/main";
+import App from "./App";
+import "./index.css"
 
-class App extends React.Component {
-  render() {
-    return (
-      <div>
-        <NavBar />
-        <Main />
-      </div>
+class Index extends React.Component{
+  render(){
+    return(
+      <App/>
     )
   }
 }
 
 const app = ReactDOMClinet.createRoot(document.getElementById("app"))
 
-app.render(<App />)
+app.render(<Index/>)
