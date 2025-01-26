@@ -25,7 +25,7 @@ body{
     align-items: center;
     font-size: 32px;
 }
-.nav{
+.nav nav{
     min-width: 600px;
     height: 40px;
     display: flex;
