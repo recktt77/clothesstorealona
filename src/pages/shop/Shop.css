@@ -1,0 +1,36 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    width: 400px;
+    height: 400px;
+}
+
+.title {
+    margin-top: 10px;
+}
+
+.price {
+    margin-top: 10px;
+}
+
+.item {
+    text-align: center;
+    margin-top: 20px;
+}
+
+button {
+    width: 150px;
+    height: 60px;
+    background-color: #50406b;
+    color: white;
+    font-size: 15px;
+    margin-top: 10px;
+}
+
+.catalog {
+    display: flex;
+    flex-wrap: wrap;
+}

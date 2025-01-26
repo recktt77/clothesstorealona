@@ -1,12 +1,12 @@
 import React from "react";
 import "./Shop.css";
+import Catalog from "../../components/catalog/catalog";
 
 class Shop extends React.Component {
   render(){
     return (
       <div className="Shop">
-        <h1>Welcome to the Home Page</h1>
-        <p>This is where the main content goes.</p>
+        <Catalog />
       </div>
     );
   }
