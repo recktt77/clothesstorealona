@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "./image";
+
 class Main extends React.Component{
     render(){
         return(
