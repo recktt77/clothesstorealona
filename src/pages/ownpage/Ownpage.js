@@ -1,12 +1,14 @@
 import React from "react";
 import "./Ownpage.css";
+import CardBar from "../../components/basket/cardbar";
+import Cardbasket from "../../components/basket/cardbasket";
 
 class Ownpage extends React.Component {
   render(){
     return (
       <div className="Ownpage">
-        <h1>Welcome to the Home Page</h1>
-        <p>This is where the main content goes.</p>
+        <Cardbasket/>
+        <CardBar/>
       </div>
     );
   }
