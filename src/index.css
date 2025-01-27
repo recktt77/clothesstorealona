@@ -12,7 +12,8 @@ body{
     border-radius: 10px;
     background-color: #ebdcc7;
     width: 100%;
-    height: 100vh;
+    height: fit-content;
+    min-height: 100vh;
 }
 
 .navbar{
