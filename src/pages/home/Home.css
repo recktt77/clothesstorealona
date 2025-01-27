@@ -85,3 +85,12 @@ body{
     border-top-right-radius: 5px;
     border-bottom-left-radius: 5px;
 } */
+
+.image{
+    height: 500px;
+    border: #000000 2px solid;
+    border-top-left-radius: 50px;
+    border-bottom-right-radius: 50px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
