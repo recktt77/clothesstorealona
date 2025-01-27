@@ -43,4 +43,5 @@ button {
     align-items: center;
     justify-content: center;
     gap: 30px;
+    padding-bottom: 100px;
 }
