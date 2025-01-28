@@ -46,5 +46,13 @@ button {
 }
 
 .item {
-    width: 300px;
+    display: flex;
+}
+
+.container {
+    width: 80%;
+}
+
+.body {
+    font-size: 20px;
 }
