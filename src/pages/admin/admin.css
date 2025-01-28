@@ -1,0 +1,19 @@
+.Admin div{
+    padding: 20px;
+    width: 70%;
+    min-height: 400px;
+    height: fit-content;
+    background-color: blanchedalmond;
+    border-radius: 10px;
+    border: black 1px solid;
+    box-shadow: black 5px 5px 20px;
+}
+
+.Admin{
+    padding-top: 100px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
