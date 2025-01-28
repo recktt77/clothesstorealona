@@ -29,7 +29,7 @@ class NavBar extends React.Component {
         return (
             <div className="navbar">
                 <p>ALONA</p>
-                <Navigation />
+                <Navigation isAdmin={this.props.isAdmin}/>
                 {this.state.showLogReg ? (
                     <LogReg onSubmit={(email) => this.handleFormSubmit(email)}/>
                 ) : this.state.userEmail ? (
