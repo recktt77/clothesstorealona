@@ -7,10 +7,10 @@ class Posts extends React.Component {
         return (
             <div className="posts">
                 {data.map((item) => (
-                    <div className="container">
-                        <h2 className="title">{item.title}</h2>
-                        <div className="item" id={item.id}>
-                            <img src={item.link} />
+                    <div className="container-wrap">
+                        <h2 className="title-post">{item.title}</h2>
+                        <div className="item-post" id={item.id}>
+                            <img className="img-post" src={item.link} />
                             <h3 className="body">{item.body}</h3>
                             <h3 className="likes">{item.likes}</h3>
                         </div>
