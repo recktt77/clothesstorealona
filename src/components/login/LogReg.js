@@ -1,37 +1,38 @@
 import React from "react";
-import Login from "./login";
-import Register from "./register";
+import Register from "../login/registration";
+import Login from "../login/logining";
 
 class LogReg extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            isToggle: false,
-            email: "",
+          showRegister: true,
+          email: "",
         };
-
         this.handleEmailSubmit = this.handleEmailSubmit.bind(this);
-        this.handleChange= this.handleChange.bind(this)
-    }
-    handleChange(){
-        this.setState({isToggle: !this.state.isToggle})
-    }
-    handleEmailSubmit(email) {
+      }
+    
+      toggleForm = () => {
+        this.setState({ showRegister: !this.state.showRegister });
+      };
+
+      handleEmailSubmit(email) {
         if (this.props.onSubmit) {
             this.props.onSubmit(email);
         }
     }
-
-    render() {
+    
+      render() {
         return (
-            <div className="LogReg">
-                {!this.state.isToggle ?
-                (<Login onSubmit={this.handleEmailSubmit} onClick={this.handleChange}/>)
-                :
-                (<Register onSubmit={this.handleEmailSubmit} onClick={this.handleChange}/>)}
-            </div>
+          <div>
+            {this.state.showRegister ? (
+              <Register onSwitch={this.toggleForm} />
+            ) : (
+              <Login onSwitch={this.toggleForm} onSubmit={this.handleEmailSubmit}/>
+            )}
+          </div>
         );
-    }
+      }
 }
 
 export default LogReg;
