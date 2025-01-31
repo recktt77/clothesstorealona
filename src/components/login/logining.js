@@ -1,6 +1,5 @@
-// src/components/Login.js
 import React, { Component } from "react";
-import { loginUser } from "../../api";
+import { loginUser, isAdmin } from "../../api";
 
 class Login extends Component {
   constructor(props) {
@@ -19,29 +18,32 @@ class Login extends Component {
   handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await loginUser({
+      const { user } = await loginUser({
         email: this.state.email,
         password: this.state.password,
       });
-      this.setState({ message: "enetred succesfuly" });
+
+      const adminStatus = await isAdmin(this.state.email);
+
+      this.props.onSubmit(user.email, adminStatus);
+      this.setState({ message: "Login successful" });
     } catch (error) {
-      this.setState({ message: error || "error" });
+      this.setState({ message: error.message || "Login failed" });
     }
-    this.props.onSubmit(this.state.email);
   };
 
   render() {
     return (
-      <div style={{ maxWidth: "400px", margin: "auto", padding: "20px", border: "1px solid #ccc", borderRadius: "5px" }}>
+      <div className="form">
         <h2>Login</h2>
         {this.state.message && <p style={{ color: "red" }}>{this.state.message}</p>}
         <form onSubmit={this.handleSubmit}>
           <input type="email" name="email" placeholder="Email" onChange={this.handleChange} required /><br />
-          <input type="password" name="password" placeholder="password" onChange={this.handleChange} required /><br />
-          <button type="submit" >login</button>
+          <input type="password" name="password" placeholder="Password" onChange={this.handleChange} required /><br />
+          <button type="submit">Login</button>
         </form>
         <p>
-          do you have an account? <a href="#" onClick={this.props.onSwitch}>Register</a>
+          Don't have an account? <a href="#" onClick={this.props.onSwitch}>Register</a>
         </p>
       </div>
     );
