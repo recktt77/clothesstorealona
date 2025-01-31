@@ -32,7 +32,7 @@ class Register extends Component {
 
   render() {
     return (
-      <div style={{ maxWidth: "400px", margin: "auto", padding: "20px", border: "1px solid #ccc", borderRadius: "5px" }}>
+      <div className="form">
         <h2>Registration</h2>
         {this.state.message && <p style={{ color: "red" }}>{this.state.message}</p>}
         <form onSubmit={this.handleSubmit}>

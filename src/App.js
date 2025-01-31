@@ -9,22 +9,25 @@ import Admin from "./pages/admin/admin";
 
 class App extends React.Component {
   constructor(props){
-    super(props)
+    super(props);
     this.state = {
-      isAdmin: false
-    }
+      isAdmin: false,
+      userEmail: ""
+    };
+
+    this.handleUserLogin = this.handleUserLogin.bind(this);
   }
 
-  // hendlerAdminPage(){
-    
-  // }
+  handleUserLogin(email, isAdmin) {
+    this.setState({ userEmail: email, isAdmin });
+  }
 
 
   render() {
     return (
       <Router>
         <div>
-          <NavBar isAdmin={this.state.isAdmin}/>
+          <NavBar onSubmit={this.hendlerAdminPage}/>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
