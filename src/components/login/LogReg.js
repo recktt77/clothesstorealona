@@ -16,15 +16,16 @@ class LogReg extends React.Component {
         this.setState({ showRegister: !this.state.showRegister });
       };
 
-      handleEmailSubmit(email) {
+      handleEmailSubmit(email, isAdmin) {
         if (this.props.onSubmit) {
-            this.props.onSubmit(email);
+            this.props.onSubmit(email, isAdmin);
         }
     }
     
+    
       render() {
         return (
-          <div>
+          <div className="LogReg">
             {this.state.showRegister ? (
               <Register onSwitch={this.toggleForm} />
             ) : (
