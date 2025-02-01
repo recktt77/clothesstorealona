@@ -93,44 +93,31 @@ export const deleteUser = async (userId) => {
 };
 
 
-const API_URL_GOODS = "http://localhost:3000/goods";
 const API_URL_POSTS = "http://localhost:3000/posts";
 
 export const getAllGoods = async () => {
-  try {
-    const response = await axios.get(API_URL_GOODS);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка получения товаров");
-  }
+  return axios.get(`${API_URL}/goods`);
 };
 
 export const addGood = async (goodData) => {
-  try {
-    const response = await axios.post(API_URL_GOODS, goodData);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка добавления товара");
-  }
+  return axios.post(`${API_URL}/goods`, goodData, {
+    headers: { "Content-Type": "application/json" }, 
+  });
 };
 
+
 export const updateGood = async (goodId, updatedData) => {
-  try {
-    const response = await axios.put(`${API_URL_GOODS}/${goodId}`, updatedData);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка обновления товара");
-  }
+  return axios.put(`${API_URL}/goods/${goodId}`, updatedData);
 };
 
 export const deleteGood = async (goodId) => {
-  try {
-    await axios.delete(`${API_URL_GOODS}/${goodId}`);
-    return { message: "Товар удален" };
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка удаления товара");
-  }
+  return axios.delete(`${API_URL}/goods/${goodId}`);
 };
+
+
+
+
+
 
 export const getAllPosts = async () => {
   try {
