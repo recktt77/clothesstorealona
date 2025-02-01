@@ -10,6 +10,7 @@ export const registerUser = async (userData) => {
   }
   try {
     const response = await axios.post(`${API_URL_Reg}`, userData1);
+    console.log("registered")
     return response.data;
   } catch (error) {
     throw error.response?.data || "error registartion";
