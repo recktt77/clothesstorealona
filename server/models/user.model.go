@@ -5,5 +5,5 @@ type User struct {
 	Email    string `json:"email"`
 	Number   string `json:"number"`
 	Password string `json:"password"`
-	// IsAdmin  bool   `json:"isAdmin"`
+	IsAdmin  bool   `json:"isAdmin"`
 }

@@ -1,53 +1,63 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import { loginUser, isAdmin } from "../../api";
 
-class Login extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      email: "",
-      password: "",
-      message: "",
-    };
-  }
+const Login = ({ onSubmit, onSwitch }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
-
-  handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage(""); 
+
     try {
-      const { user } = await loginUser({
-        email: this.state.email,
-        password: this.state.password,
-      });
+      const response = await loginUser({ identifier: email, password });
+      if (!response || !response.user) {
+        throw new Error("Invalid response from server");
+      }
+      const { user } = response;
 
-      const adminStatus = await isAdmin(this.state.email);
-
-      this.props.onSubmit(user.email, adminStatus);
-      this.setState({ message: "Login successful" });
+      const adminStatus = await isAdmin(email);
+      
+      onSubmit(user.email, adminStatus);
+      setMessage("Login successful");
     } catch (error) {
-      this.setState({ message: error.message || "Login failed" });
+      setMessage(error.message || "Login failed");
     }
   };
 
-  render() {
-    return (
-      <div className="form">
-        <h2>Login</h2>
-        {this.state.message && <p style={{ color: "red" }}>{this.state.message}</p>}
-        <form onSubmit={this.handleSubmit}>
-          <input type="email" name="email" placeholder="Email" onChange={this.handleChange} required /><br />
-          <input type="password" name="password" placeholder="Password" onChange={this.handleChange} required /><br />
-          <button type="submit">Login</button>
-        </form>
-        <p>
-          Don't have an account? <a href="#" onClick={this.props.onSwitch}>Register</a>
-        </p>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="form">
+      <h2>Login</h2>
+      {message && <p style={{ color: "red" }}>{message}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          aria-label="Email"
+        />
+        <br />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          aria-label="Password"
+        />
+        <br />
+        <button type="submit">Login</button>
+      </form>
+      <p>
+        Don't have an account? <a href="#" onClick={onSwitch}>Register</a>
+      </p>
+    </div>
+  );
+};
 
 export default Login;
