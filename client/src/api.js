@@ -1,42 +1,41 @@
 import axios from "axios";
 
-const API_URL_Reg = "http://localhost:4000/register";
-const API_URL_Log = "http://localhost:4000/login";
+const API_URL = "http://localhost:4000";
 
 export const registerUser = async (userData) => {
-  const userData1 ={
-    ...userData,
-    isAdmin: false
-  }
   try {
-    const response = await axios.post(`${API_URL_Reg}`, userData1);
-    console.log("registered")
+    const response = await axios.post(`${API_URL}/register`, userData, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("User registered successfully:", response.data);
     return response.data;
   } catch (error) {
-    throw error.response?.data || "error registartion";
+    console.error("Registration error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Registration failed");
   }
 };
 
-
-
 export const loginUser = async (userData) => {
   try {
-    const response = await axios.post(API_URL_Log, userData, {
+    const response = await axios.post(`${API_URL}/login`, userData, {
       headers: { "Content-Type": "application/json" },
     });
 
-    console.log("Login successful:", response.data);
+    if (!response.data.user) {
+      throw new Error("Invalid login response");
+    }
+
     return response.data;
   } catch (error) {
     console.error("Login error:", error.response?.data || error.message);
-    throw new Error(error.response?.data || "Login failed");
+    throw new Error(error.response?.data?.message || "Login failed");
   }
 };
 
 
 export const isAdmin = async (email) => {
   try {
-    const response = await axios.get(`http://localhost:4000/is-admin?email=${email}`, {
+    const response = await axios.get(`${API_URL}/is-admin?email=${email}`, {
       headers: { "Content-Type": "application/json" },
     });
 
@@ -48,6 +47,9 @@ export const isAdmin = async (email) => {
   }
 };
 
+
+
+//TODO
 
 export const listOfUsersForAdmin = async (adminEmail) => {
   try {
@@ -65,7 +67,7 @@ export const listOfUsersForAdmin = async (adminEmail) => {
 
 export const addUser = async (userData) => {
   try {
-    const response = await axios.post(API_URL_Reg, userData);
+    const response = await axios.post(API_URL, userData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка добавления пользователя");
@@ -74,7 +76,7 @@ export const addUser = async (userData) => {
 
 export const updateUser = async (userId, updatedData) => {
   try {
-    const response = await axios.put(`${API_URL_Reg}/${userId}`, updatedData);
+    const response = await axios.put(`${API_URL}/${userId}`, updatedData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка обновления пользователя");
@@ -83,7 +85,7 @@ export const updateUser = async (userId, updatedData) => {
 
 export const deleteUser = async (userId) => {
   try {
-    await axios.delete(`${API_URL_Reg}/${userId}`);
+    await axios.delete(`${API_URL}/${userId}`);
     return { message: "Пользователь удален" };
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка удаления пользователя");

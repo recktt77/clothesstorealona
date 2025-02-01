@@ -30,8 +30,12 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Id = nextId
+	if nextId==1{
+		user.IsAdmin=true
+	}
 	nextId++
 	users[user.Id] = user
+
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"msg": "You are registered succesfully"})
@@ -54,7 +58,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	user, err := findUserByIdentifier(req.Identifier)
 	if err != nil {
-		http.Error(w, "Invalid email/number or password", http.StatusUnauthorized)
+		http.Error(w, "Invalid email/number", http.StatusUnauthorized)
 		return
 	}
 
@@ -64,8 +68,11 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"msg": "You are logged in succesfully"})
-
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"msg": "You are logged in succesfully",
+		"user": user, 
+	})
+	
 }
 
 func findUserByIdentifier(identifier string) (*models.User, error) {
@@ -75,4 +82,27 @@ func findUserByIdentifier(identifier string) (*models.User, error) {
 		}
 	}
 	return nil, errors.New("user not found")
+}
+
+
+func CheckAdminStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, `{"error": "Method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	email := r.URL.Query().Get("email")
+	if email == "" {
+		http.Error(w, `{"error": "Email is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	user, err := findUserByIdentifier(email)
+	if err != nil {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"isAdmin": user.IsAdmin})
 }

@@ -29,6 +29,7 @@ func main() {
 
 	r.HandleFunc("/register", handlers.UserRegister).Methods("POST", "OPTIONS")
 	r.HandleFunc("/login", handlers.UserLogin).Methods("POST", "OPTIONS")
+	r.HandleFunc("/is-admin", handlers.CheckAdminStatus).Methods("GET", "OPTIONS")
 
 	if err := http.ListenAndServe(":4000", r); err != nil {
 		panic(err)
