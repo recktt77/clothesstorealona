@@ -51,7 +51,7 @@ const Login = ({ onSubmit, onSwitch }) => {
           aria-label="Password"
         />
         <br />
-        <button type="submit">Login</button>
+        <button className="buttonWight" type="submit">Login</button>
       </form>
       <p>
         Don't have an account? <a href="#" onClick={onSwitch}>Register</a>
