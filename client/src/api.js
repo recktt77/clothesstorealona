@@ -49,6 +49,28 @@ export const isAdmin = async (email) => {
 
 
 
+
+export const getAllGoods = async () => {
+  return axios.get(`${API_URL}/goods`);
+};
+
+export const addGood = async (goodData) => {
+  return axios.post(`${API_URL}/goods`, goodData, {
+    headers: { "Content-Type": "application/json" }, 
+  });
+};
+
+
+export const updateGood = async (goodId, updatedData) => {
+  return axios.put(`${API_URL}/goods/${goodId}`, updatedData);
+};
+
+export const deleteGood = async (goodId) => {
+  return axios.delete(`${API_URL}/goods/${goodId}`);
+};
+
+
+
 //TODO
 
 export const listOfUsersForAdmin = async (adminEmail) => {
@@ -94,28 +116,6 @@ export const deleteUser = async (userId) => {
 
 
 const API_URL_POSTS = "http://localhost:3000/posts";
-
-export const getAllGoods = async () => {
-  return axios.get(`${API_URL}/goods`);
-};
-
-export const addGood = async (goodData) => {
-  return axios.post(`${API_URL}/goods`, goodData, {
-    headers: { "Content-Type": "application/json" }, 
-  });
-};
-
-
-export const updateGood = async (goodId, updatedData) => {
-  return axios.put(`${API_URL}/goods/${goodId}`, updatedData);
-};
-
-export const deleteGood = async (goodId) => {
-  return axios.delete(`${API_URL}/goods/${goodId}`);
-};
-
-
-
 
 
 
