@@ -1,157 +1,161 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./admin.css";
 import { listOfUsersForAdmin, addUser, updateUser, deleteUser } from "../../api";
 
-class AdminUsers extends React.Component {
-constructor(props) {
-        super(props);
-        this.state = {
-            users: null,
-            newUserEmail: "",
-            newUserPassword: "",
-            newuserNumber: null,
-            editUserId: null,
-            editUserEmail: "",
-            editUserIsAdmin: false,
-            editUserNumber: null,
-        };
-    }
+const AdminUsers = () => {
+    const [users, setUsers] = useState(null);
+    const [newUser, setNewUser] = useState({ email: "", password: "", number: "" });
+    const [editUser, setEditUser] = useState(null);
+    const [aaddUser, setAddUser] = useState(false)
 
-    async componentDidMount() {
-        await this.fetchUsers();
-    }
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
-    async fetchUsers() {
+    const fetchUsers = async () => {
         try {
-            const users = await listOfUsersForAdmin();
-            this.setState({ users });
+            const response = await listOfUsersForAdmin();
+            setUsers(response);
         } catch (error) {
             console.error("Ошибка загрузки пользователей:", error);
-            this.setState({ users: [] });
+            setUsers([]);
         }
-    }
+    };
 
-    async handleAddUser() {
+    const handleAddUser = async () => {
         try {
-            await addUser({ 
-                email: this.state.newUserEmail, 
-                password: this.state.newUserPassword, 
-                isAdmin: false 
+            await addUser({
+                email: newUser.email,
+                password: newUser.password,
+                number: newUser.number,
+                isAdmin: false,
             });
-            this.setState({ newUserEmail: "", newUserPassword: "" });
-            await this.fetchUsers();
+            setNewUser({ email: "", password: "", number: "" });
+            fetchUsers();
+            setAddUser(false)
         } catch (error) {
             console.error("Ошибка добавления пользователя:", error);
         }
+    };
+
+    const handleButtonAdd = async () =>{
+        setAddUser(!aaddUser)
     }
 
-    async handleUpdateUser() {
+    const handleUpdateUser = async () => {
+        if (!editUser) return;
         try {
-            await updateUser(this.state.editUserId, {
-                email: this.state.editUserEmail,
-                isAdmin: this.state.editUserIsAdmin,
+            await updateUser(editUser.id, {
+                email: editUser.email,
+                number: editUser.number,
+                isAdmin: editUser.isAdmin,
             });
-            this.setState({ editUserId: null, editUserEmail: "", editUserIsAdmin: false });
-            await this.fetchUsers();
+            setEditUser(null);
+            fetchUsers();
         } catch (error) {
             console.error("Ошибка обновления пользователя:", error);
         }
-    }
+    };
 
-    async handleDeleteUser(userId) {
+    const handleDeleteUser = async (userId) => {
         try {
             await deleteUser(userId);
-            await this.fetchUsers();
+            fetchUsers();
         } catch (error) {
             console.error("Ошибка удаления пользователя:", error);
         }
-    }
+    };
 
-    render() {
-        const { users, newUserEmail, newUserPassword, editUserId, editUserEmail, editUserIsAdmin, newuserNumber } = this.state;
+    return (
+        <div className="container">
+            <h2>Admin Panel - Users</h2>
+            <button className="buttonWight" onClick={handleButtonAdd}>Add user</button>
+            {aaddUser &&(
+                <div className="addGoods">
+                <h3>Add User</h3>
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                />
+                <input
+                    type="number"
+                    placeholder="Number"
+                    value={newUser.number}
+                    onChange={(e) => setNewUser({ ...newUser, number: e.target.value })}
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                />
+                <button className="buttonWight" onClick={handleAddUser}>Add User</button>
+                <button className="buttonWight" onClick={handleButtonAdd}>Cancel</button>
+            </div>
+            )}
+            <table className="table">
+                <thead>
+                    <tr>
+                    <th>ID</th>
+                            <th>Email</th>
+                            <th>Number</th>
+                            <th>Admin</th>
+                            <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Array.isArray(users) && users.length > 0 ? (
+                        users.map((user, index) => (
+                            <tr key={index}>
+                                <td>{user.id || "N/A"}</td>
+                                <td>{user.email || "No Email"}</td>
+                                <td>{user.number || 0}</td>
+                                <td>{user.isAdmin ? "✅ Yes" : "❌ No"}</td>
+                                <td>
+                                    <button className="buttonWight" onClick={() => setEditUser(user)}>Edit</button>
+                                    <button className="buttonWight" onClick={() => handleDeleteUser(user.id)}>Delete</button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="6">No Users found</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
 
-        return (<div>
-            <h2>Admin Panel</h2>
+            {editUser && (
+                <div className="addGoods">
+                    <h3>Edit User</h3>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={editUser.email}
+                        onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    />
+                    <input
+                        type="number"
+                        placeholder="Number"
+                        value={editUser.number}
+                        onChange={(e) => setEditUser({ ...editUser, number: e.target.value })}
+                    />
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={editUser.isAdmin}
+                            onChange={(e) => setEditUser({ ...editUser, isAdmin: e.target.checked })}
+                        />
+                        Admin
+                    </label>
+                    <button className="buttonWight" onClick={handleUpdateUser}>Save</button>
+                    <button className="buttonWight" onClick={() => setEditUser(null)}>Cancel</button>
+                </div>
+            )}
+        </div>
+    );
+};
 
-<div className="userform">
-    <h3>Add User</h3>
-    <input 
-        type="email" 
-        placeholder="Email" 
-        value={newUserEmail} 
-        onChange={(e) => this.setState({ newUserEmail: e.target.value })} 
-    />
-    <input 
-        type="number" 
-        placeholder="Number" 
-        value={newuserNumber} 
-        onChange={(e) => this.setState({ newuserNumber: e.target.value })} 
-    />
-    <input 
-        type="password" 
-        placeholder="Password" 
-        value={newUserPassword} 
-        onChange={(e) => this.setState({ newUserPassword: e.target.value })} 
-    />
-    <button onClick={() => this.handleAddUser()}>Add User</button>
-</div>
-
-{users === null ? (
-    <p>Loading users...</p>
-) : users.length === 0 ? (
-    <p>No users found</p>
-) : (
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Admin</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {users.map((user) => (
-                <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.email}</td>
-                    <td>{user.number}</td>
-                    <td>{user.isAdmin ? "✅ Yes" : "❌ No"}</td>
-                    <td>
-                        <button onClick={() => this.setState({ editUserId: user.id, editUserEmail: user.email, editUserIsAdmin: user.isAdmin , editUserNumber: user.number})}>
-                            Edit
-                        </button>
-                        <button onClick={() => this.handleDeleteUser(user.id)}>Delete</button>
-                    </td>
-                </tr>
-            ))}
-        </tbody>
-    </table>
-)}
-
-{editUserId && (
-    <div className="formforusers">
-        <h3>Edit User</h3>
-        <input 
-            type="email" 
-            placeholder="Email" 
-            value={editUserEmail} 
-            onChange={(e) => this.setState({ editUserEmail: e.target.value })} 
-        />
-        <label>
-            <input 
-                type="checkbox" 
-                checked={editUserIsAdmin} 
-                onChange={(e) => this.setState({ editUserIsAdmin: e.target.checked })} 
-            />
-            Admin
-        </label>
-        <button onClick={() => this.handleUpdateUser()}>Save</button>
-        <button onClick={() => this.setState({ editUserId: null })}>Cancel</button>
-    </div>
-)}
-        </div>)
-    }
-}
-
-export default AdminUsers
+export default AdminUsers;

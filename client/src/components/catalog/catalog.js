@@ -13,7 +13,7 @@ class Catalog extends React.Component {
     }
 
     componentDidMount(){
-        axios.get("http://localhost:3000/goods")
+        axios.get("http://localhost:4000/goods")
         .then((response)=>{
             this.setState({
                 data: response.data,

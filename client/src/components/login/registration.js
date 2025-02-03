@@ -39,7 +39,7 @@ class Register extends Component {
           <input type="email" name="email" placeholder="Email" onChange={this.handleChange} required /><br />
           <input type="text" name="number" placeholder="Phone number" onChange={this.handleChange} required /><br />
           <input type="password" name="password" placeholder="password" onChange={this.handleChange} required /><br />
-          <button type="submit">Register</button>
+          <button className="buttonWight" type="submit">Register</button>
         </form>
         <p>
           Have you alreafy registered <a href="#" onClick={this.props.onSwitch}>Enter</a>
