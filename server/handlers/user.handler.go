@@ -142,12 +142,12 @@ func AddGood(w http.ResponseWriter, r *http.Request) {
     var good models.Good
     err := json.NewDecoder(r.Body).Decode(&good)
     if err != nil {
-        fmt.Println("Ошибка декодирования JSON:", err)
+        fmt.Println("error of decoding JSON:", err)
         http.Error(w, "Bad request", http.StatusBadRequest)
         return
     }
 
-    fmt.Printf("Полученные данные: %+v\n", good)
+    fmt.Printf("getting data: %+v\n", good)
 
     if good.Title == "" || good.Price <= 0 || good.Image == "" || good.Category == "" {
         http.Error(w, "Missing required fields", http.StatusBadRequest)
