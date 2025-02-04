@@ -137,48 +137,48 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, `{"error": "Method not allowed"}`, http.StatusMethodNotAllowed)
 		return
-	}
-
-	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 3 || pathParts[2] == "" {
+	  }
+	
+	  // Извлекаем ID из URL
+	  pathParts := strings.Split(r.URL.Path, "/")
+	  if len(pathParts) < 3 {
 		http.Error(w, `{"error": "Invalid request path"}`, http.StatusBadRequest)
 		return
-	}
-
-	email := pathParts[2]
-
-	var updatedData struct {
+	  }
+	
+	  id, err := strconv.Atoi(pathParts[2])
+	  if err != nil {
+		http.Error(w, `{"error": "Invalid user ID"}`, http.StatusBadRequest)
+		return
+	  }
+	
+	  user, exists := users[id]
+	
+	  if !exists {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	  }
+	
+	  // Декодируем тело запроса
+	  var updatedData struct {
 		Email   string `json:"email"`
 		Number  string `json:"number"`
 		IsAdmin bool   `json:"isAdmin"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&updatedData); err != nil {
+	  }
+	
+	  if err := json.NewDecoder(r.Body).Decode(&updatedData); err != nil {
 		http.Error(w, `{"error": "Invalid JSON format"}`, http.StatusBadRequest)
 		return
-	}
+	  }
 
-	found := false
-	for id, user := range users {
-		if user.Email == email {
-			users[id] = models.User{
-				Id:      user.Id,
-				Email:   updatedData.Email,
-				Number:  updatedData.Number,
-				IsAdmin: updatedData.IsAdmin,
-			}
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedData)
+	  user.Email = updatedData.Email
+	  user.Number = updatedData.Number
+	  user.IsAdmin = updatedData.IsAdmin
+	  users[id] = user
+	
+	  w.Header().Set("Content-Type", "application/json")
+	  json.NewEncoder(w).Encode(user)
+	
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
