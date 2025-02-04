@@ -105,7 +105,7 @@ const AdminPosts = () => {
                                 <td>{post.body}</td>
                                 <td>{post.likes}</td>
                                 <td>
-                                    <button onClick={() => setEditPost(post)}>Edit</button>
+                                    <button className="buttonWight" onClick={() => setEditPost(post)}>Edit</button>
                                     <button className="buttonWight" onClick={() => handleDeletePost(post.id)}>Delete</button>
                                 </td>
                             </tr>
