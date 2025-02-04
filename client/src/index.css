@@ -157,3 +157,9 @@ input{
     padding: 30px;
     box-shadow: #99998f 5px 5px 5px;
 }
+
+.loggedIn{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}

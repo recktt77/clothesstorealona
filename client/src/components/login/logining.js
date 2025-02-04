@@ -1,26 +1,37 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { loginUser, isAdmin } from "../../api";
 
-const Login = ({ onSubmit, onSwitch }) => {
+const Login = ({ onSubmit }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(""); 
+    setMessage("");
 
     try {
       const response = await loginUser({ identifier: email, password });
+
       if (!response || !response.user) {
         throw new Error("Invalid response from server");
       }
-      const { user } = response;
 
+      const { user } = response;
       const adminStatus = await isAdmin(email);
-      
+
+      console.log("Login successful:", user.email, "Admin:", adminStatus);
+
+      localStorage.setItem("token", "user-token");
+      localStorage.setItem("isAdmin", adminStatus ? "true" : "false");
+      localStorage.setItem("userEmail", user.email);
+
       onSubmit(user.email, adminStatus);
-      setMessage("Login successful");
+
+      navigate("/", { replace: true });
+
     } catch (error) {
       setMessage(error.message || "Login failed");
     }
@@ -33,7 +44,6 @@ const Login = ({ onSubmit, onSwitch }) => {
       <form onSubmit={handleSubmit}>
         <input
           type="email"
-          name="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -43,7 +53,6 @@ const Login = ({ onSubmit, onSwitch }) => {
         <br />
         <input
           type="password"
-          name="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -53,9 +62,6 @@ const Login = ({ onSubmit, onSwitch }) => {
         <br />
         <button className="buttonWight" type="submit">Login</button>
       </form>
-      <p>
-        Don't have an account? <a href="#" onClick={onSwitch}>Register</a>
-      </p>
     </div>
   );
 };
