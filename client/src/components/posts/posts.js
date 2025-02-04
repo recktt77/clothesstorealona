@@ -13,7 +13,7 @@ class Posts extends React.Component {
     }
 
     componentDidMount(){
-        axios.get("http://localhost:3000/posts")
+        axios.get("http://localhost:4000/posts")
         .then((response)=>{
             this.setState({
                 data: response.data,
