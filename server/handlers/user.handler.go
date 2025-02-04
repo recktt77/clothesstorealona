@@ -25,15 +25,16 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	var user models.User
 
-	if existingUser, _ := findUserByIdentifier(user.Email); existingUser != nil {
-		fmt.Println("User with this email already exists: ", user.Email)
-		http.Error(w, "User with this email already exists", http.StatusConflict)
-		return
-	}
+	
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		fmt.Println("Bad request")
 		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	if existingUser, _ := findUserByIdentifier(user.Email); existingUser != nil {
+		fmt.Println("User with this email already exists: ", user.Email)
+		http.Error(w, "User with this email already exists", http.StatusConflict)
 		return
 	}
 	user.Id = nextId
