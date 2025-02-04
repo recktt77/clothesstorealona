@@ -40,6 +40,11 @@ func main() {
 	r.HandleFunc("/goods/{id}", handlers.UpdateGood).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/goods/{id}", handlers.DeleteGood).Methods("DELETE", "OPTIONS")
 
+	r.HandleFunc("/posts", handlers.GetAllPosts).Methods("GET", "OPTIONS")
+	r.HandleFunc("/posts", handlers.AddPost).Methods("POST", "OPTIONS")
+	r.HandleFunc("/posts/{id}", handlers.UpdatePost).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/posts/{id}", handlers.DeletePost).Methods("DELETE", "OPTIONS")
+
 	if err := http.ListenAndServe(":4000", r); err != nil {
 		panic(err)
 	}
