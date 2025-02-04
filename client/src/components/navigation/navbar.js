@@ -8,37 +8,45 @@ class NavBar extends React.Component {
         super(props);
         this.state = {
             showLogReg: false,
-            userEmail: "",
-            isAdmin: false,
         };
 
         this.handleJoinUsClick = this.handleJoinUsClick.bind(this);
-        this.handleFormSubmit = this.handleFormSubmit.bind(this);
+        this.handleLogoutClick = this.handleLogoutClick.bind(this);
+        this.handleLoginSuccess = this.handleLoginSuccess.bind(this);
     }
 
     handleJoinUsClick() {
-        this.setState({ showLogReg: true });
+        this.setState({ showLogReg: !this.state.showLogReg });
     }
 
-    handleFormSubmit(email, isAdmin) {
-        this.setState({
-            showLogReg: false,
-            userEmail: email,
-            isAdmin: isAdmin, 
-        });
+    handleLoginSuccess(email, isAdmin) {
+        console.log("Login successful in NavBar:", email, "Admin:", isAdmin);
+        this.setState({ showLogReg: false }); 
+        this.props.onSubmit(email, isAdmin);
+    }
+
+    handleLogoutClick() {
+        console.log("Logout button clicked!");
+        if (this.props.onLogout) {
+            this.props.onLogout();
+        } else {
+            console.error("onLogout is not defined!");
+        }
     }
 
     render() {
         return (
             <div className="navbar">
                 <p>ALONA</p>
-                <Navigation isAdmin={this.state.isAdmin} />
-                {this.state.showLogReg ? (
-                    <LogReg onSubmit={(email, isAdmin) => this.handleFormSubmit(email, isAdmin)}/>
-                ) : this.state.userEmail ? (
-                    <>
-                        <p>{this.state.userEmail}</p>
-                    </>
+                <Navigation isAdmin={this.props.isAdmin} />
+                
+                {this.state.showLogReg ? ( 
+                    <LogReg onSubmit={this.handleLoginSuccess} switching={this.handleJoinUsClick} />
+                ) : this.props.userEmail ? (
+                    <div className="loggedIn">
+                        <p>{this.props.userEmail}</p>
+                        <Button buttoname="Logout" onClick={this.handleLogoutClick} />
+                    </div>
                 ) : (
                     <Button buttoname="Join us" onClick={this.handleJoinUsClick} />
                 )}
