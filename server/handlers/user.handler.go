@@ -123,32 +123,11 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	email := r.URL.Query().Get("email")
-	if email == "" {
-		http.Error(w, `{"error": "Email is required"}`, http.StatusBadRequest)
-		return
-	}
-
-	// Проверяем, является ли пользователь администратором
-	user, err := findUserByIdentifier(email)
-	if err != nil {
-		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
-		return
-	}
-
-	if !user.IsAdmin {
-		http.Error(w, `{"error": "Access denied"}`, http.StatusForbidden)
-		return
-	}
-
-	// Получаем список всех пользователей
-
 	userList := make([]models.User, 0, len(users))
 	for _, u := range users {
 		userList = append(userList, u)
 	}
 
-	// Отправляем JSON-ответ с пользователями
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(userList)
 
