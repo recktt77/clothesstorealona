@@ -26,7 +26,7 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if existingUser, _ := findUserByIdentifier(user.Email); existingUser != nil {
-		fmt.Println("User with this email already exists")
+		fmt.Println("User with this email already exists: ", user.Email)
 		http.Error(w, "User with this email already exists", http.StatusConflict)
 		return
 	}
@@ -118,7 +118,7 @@ func CheckAdminStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]bool{"isAdmin": user.IsAdmin})
 }
 
-func getAllUsers(w http.ResponseWriter, r *http.Request) {
+func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -152,6 +152,86 @@ func getAllUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(userList)
 
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, `{"error": "Method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 || pathParts[2] == "" {
+		http.Error(w, `{"error": "Invalid request path"}`, http.StatusBadRequest)
+		return
+	}
+
+	email := pathParts[2]
+
+	var updatedData struct {
+		Email   string `json:"email"`
+		Number  string `json:"number"`
+		IsAdmin bool   `json:"isAdmin"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&updatedData); err != nil {
+		http.Error(w, `{"error": "Invalid JSON format"}`, http.StatusBadRequest)
+		return
+	}
+
+	found := false
+	for id, user := range users {
+		if user.Email == email {
+			users[id] = models.User{
+				Id:      user.Id,
+				Email:   updatedData.Email,
+				Number:  updatedData.Number,
+				IsAdmin: updatedData.IsAdmin,
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedData)
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, `{"error": "Method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 || pathParts[2] == "" {
+		http.Error(w, `{"error": "Invalid request path"}`, http.StatusBadRequest)
+		return
+	}
+
+	email := pathParts[2]
+
+	deleted := false
+	for id, user := range users {
+		if user.Email == email {
+			delete(users, id)
+			deleted = true
+			break
+		}
+	}
+
+	if !deleted {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
 }
 
 func GetAllGoods(w http.ResponseWriter, r *http.Request) {
