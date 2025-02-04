@@ -26,7 +26,7 @@ class Register extends Component {
       });
       this.setState({ message: "suuccessfuly" });
     } catch (error) {
-      this.setState({ message: error || "error" });
+      this.setState({ message: error.message || "error" });
     }
   };
 
