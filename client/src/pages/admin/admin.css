@@ -1,0 +1,110 @@
+.container{
+    padding: 20px;
+    width: 70%;
+    min-height: 400px;
+    height: fit-content;
+    background-color: blanchedalmond;
+    border-radius: 10px;
+    border: black 1px solid;
+    box-shadow: black 5px 5px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 50px;
+}
+
+.Admin{
+    padding-top: 100px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.addGoods{
+    padding: 10px 30px;
+    width: 300px;
+    gap: 10px;
+    height: fit-content;
+    background-color: #ebdcc7;
+    border: #99998f 2px solid;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 20px;
+    box-shadow: #000000 5px 5px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-in-out;
+    z-index: 1;
+}
+
+.editGoods{
+    padding: 10px 30px;
+    width: 300px;
+    gap: 10px;
+    height: fit-content;
+    background-color: #ebdcc7;
+    border: #99998f 2px solid;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 20px;
+    box-shadow: #000000 5px 5px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table th, 
+.table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #ebdcc7;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f1e7d0;
+}
+
+.table tbody tr:hover {
+    background-color: #e3d4b8;
+}
+
+@media (max-width: 768px) {
+    .table {
+        font-size: 14px;
+    }
+    .table th, 
+    .table td {
+        padding: 10px;
+    }
+}
+
