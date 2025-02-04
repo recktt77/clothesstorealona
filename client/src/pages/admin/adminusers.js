@@ -7,7 +7,6 @@ const AdminUsers = () => {
     const [newUser, setNewUser] = useState({ email: "", password: "", number: "" });
     const [editUser, setEditUser] = useState(null);
     const [aaddUser, setAddUser] = useState(false)
-
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -44,12 +43,20 @@ const AdminUsers = () => {
 
     const handleUpdateUser = async () => {
         if (!editUser) return;
+        console.log("Editing this user: ", editUser);
         try {
-            await updateUser(editUser.id, {
+            await updateUser(editUser.email, {
                 email: editUser.email,
                 number: editUser.number,
                 isAdmin: editUser.isAdmin,
             });
+
+            setUsers((prevUsers) =>
+                prevUsers.map((user) =>
+                    user.email === editUser.email ? { ...user, ...editUser } : user
+                )
+            );
+
             setEditUser(null);
             fetchUsers();
         } catch (error) {
@@ -57,9 +64,9 @@ const AdminUsers = () => {
         }
     };
 
-    const handleDeleteUser = async (userId) => {
+    const handleDeleteUser = async (userEmail) => {
         try {
-            await deleteUser(userId);
+            await deleteUser(userEmail);
             fetchUsers();
         } catch (error) {
             console.error("Ошибка удаления пользователя:", error);
@@ -115,7 +122,7 @@ const AdminUsers = () => {
                                 <td>{user.isAdmin ? "✅ Yes" : "❌ No"}</td>
                                 <td>
                                     <button className="buttonWight" onClick={() => setEditUser(user)}>Edit</button>
-                                    <button className="buttonWight" onClick={() => handleDeleteUser(user.id)}>Delete</button>
+                                    <button className="buttonWight" onClick={() => handleDeleteUser(user.email)}>Delete</button>
                                 </td>
                             </tr>
                         ))
