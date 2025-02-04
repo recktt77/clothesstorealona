@@ -78,7 +78,7 @@ export const listOfUsersForAdmin = async (adminEmail) => {
     const response = await axios.get(`http://localhost:4000/users?email=${adminEmail}`, {
       headers: { "Content-Type": "application/json" },
     });
-
+    console.log("iou: ", response.data)
     return response.data;
   } catch (error) {
     console.error("Error in listing users:", error.response?.data || error.message);
@@ -89,25 +89,28 @@ export const listOfUsersForAdmin = async (adminEmail) => {
 
 export const addUser = async (userData) => {
   try {
-    const response = await axios.post(API_URL, userData);
+    const response = await axios.post(`${API_URL}/register`, userData, {
+      headers: { "Content-Type": "application/json" },
+    });
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка добавления пользователя");
   }
 };
 
-export const updateUser = async (userId, updatedData) => {
+export const updateUser = async (userEmail, updatedData) => {
   try {
-    const response = await axios.put(`${API_URL}/${userId}`, updatedData);
+    const response = await axios.put(`${API_URL}/users/${userEmail}`, updatedData);
+    console.log("Update data: ", response.data);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка обновления пользователя");
   }
 };
 
-export const deleteUser = async (userId) => {
+export const deleteUser = async (userEmail) => {
   try {
-    await axios.delete(`${API_URL}/${userId}`);
+    await axios.delete(`${API_URL}/users/${userEmail}`);
     return { message: "Пользователь удален" };
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка удаления пользователя");
