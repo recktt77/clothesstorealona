@@ -45,7 +45,7 @@ const AdminUsers = () => {
         if (!editUser) return;
         console.log("Editing this user: ", editUser);
         try {
-            await updateUser(editUser.email, {
+            await updateUser(editUser.id, {
                 email: editUser.email,
                 number: editUser.number,
                 isAdmin: editUser.isAdmin,
