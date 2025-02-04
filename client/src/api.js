@@ -118,13 +118,14 @@ export const deleteUser = async (userEmail) => {
 };
 
 
-const API_URL_POSTS = "http://localhost:3000/posts";
+const API_URL_POSTS = "http://localhost:4000/posts";
 
 
 
 export const getAllPosts = async () => {
   try {
     const response = await axios.get(API_URL_POSTS);
+    console.log(response.data)
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка получения постов");
@@ -134,8 +135,10 @@ export const getAllPosts = async () => {
 export const addPost = async (postData) => {
   try {
     const response = await axios.post(API_URL_POSTS, postData);
+    console.log(response.data);
     return response.data;
   } catch (error) {
+    console.log(postData)
     throw new Error(error.response?.data?.message || "Ошибка добавления поста");
   }
 };
