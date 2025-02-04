@@ -27,7 +27,9 @@ func main() {
 
 	r.Use(corsMiddleware)
 
-	r.HandleFunc("/users", handlers.getAllUsers).Methods("GET", "OPTIONS")
+	r.HandleFunc("/users", handlers.GetAllUsers).Methods("GET", "OPTIONS")
+	r.HandleFunc("/users/{email}", handlers.UpdateUser).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/users/{email}", handlers.DeleteUser).Methods("DELETE", "OPTIONS")
 
 	r.HandleFunc("/register", handlers.UserRegister).Methods("POST", "OPTIONS")
 	r.HandleFunc("/login", handlers.UserLogin).Methods("POST", "OPTIONS")
