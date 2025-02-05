@@ -42,7 +42,7 @@ class Register extends Component {
           <button className="buttonWight" type="submit">Register</button>
         </form>
         <p>
-          Have you alreafy registered <a href="#" onClick={this.props.onSwitch}>Enter</a>
+          Have you already registered <a href="#" onClick={this.props.onSwitch}>Enter</a>
         </p>
       </div>
     );
