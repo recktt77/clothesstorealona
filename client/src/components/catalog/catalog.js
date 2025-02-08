@@ -1,6 +1,6 @@
 import React from "react";
-import Button from "../navigation/button";
 import axios from "axios";
+import { addToCart } from "../../api";
 
 class Catalog extends React.Component {
     constructor(props){
@@ -28,6 +28,20 @@ class Catalog extends React.Component {
         });
     }
 
+    handleAddToCart = async (goodId) => {
+        const userId = localStorage.getItem("userId"); 
+        if (!userId) {
+            alert("Вы не вошли в аккаунт");
+            return;
+        }
+        try {
+            await addToCart(userId, goodId);
+            alert("Товар добавлен в корзину!");
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+    
     render() {
         const { data, loading, error } = this.state;
 
@@ -37,10 +51,10 @@ class Catalog extends React.Component {
             <div className="catalog">
                 {data.map((item) => (
                     <div className="item" id={item.id} key={item.id}>
-                        <img src={item.images} />
+                        <img src={item.image} alt={item.title} />
                         <h2 className="title">{item.title}</h2>
                         <h3 className="price">{item.price}</h3>
-                        <Button buttoname='add'/>
+                        <button className="buttonWight" onClick={() => this.handleAddToCart(item.id)}>add to basket</button>
                     </div>
                 ))}
             </div>
@@ -48,4 +62,4 @@ class Catalog extends React.Component {
     }
 }
 
-export default Catalog
+export default Catalog;

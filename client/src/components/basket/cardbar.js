@@ -1,23 +1,32 @@
 import React from "react";
-import Button from "../navigation/button"
-class CardBar extends React.Component{
-    render(){
-        return(
-            <div className="cardbar">
-                <h2>Total</h2>
-                <hr/>
-                <p>Price</p>
-                <label for="delivery">Type of delivery:</label>
+import "./CardBar.css"; // 👈 Import the new styles
 
-                <select name="delivery" id="delivery">
-                    <option value="defoult">Defoult free</option>
-                    <option value="express">Fast for addtional 5$</option>
-                </select>
+const CardBar = () => {
+    const userEmail = localStorage.getItem("userEmail") || "User";
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-                <Button buttoname="Next"/>
+    const handleLogout = () => {
+        localStorage.clear();
+        window.location.reload();
+    };
+
+    return (
+        <div className="cardbar-container">
+            <div className="cardbar-header">
+                <img 
+                    src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" 
+                    alt="User Avatar" 
+                    className="user-avatar"
+                />
+                <div>
+                    <h2 className="user-name">{userEmail}</h2>
+                    <p className="user-role">{isAdmin ? "👑 Администратор" : "🛍️ Покупатель"}</p>
+                </div>
             </div>
-        )
-    }
-}
 
-export default CardBar
+            <button className="logout-button" onClick={handleLogout}>🚪 Выйти</button>
+        </div>
+    );
+};
+
+export default CardBar;
