@@ -44,6 +44,14 @@ func main() {
 	r.HandleFunc("/posts", handlers.AddPost).Methods("POST", "OPTIONS")
 	r.HandleFunc("/posts/{id}", handlers.UpdatePost).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/posts/{id}", handlers.DeletePost).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/user-posts", handlers.GetUserPosts).Methods("GET", "OPTIONS")
+
+
+
+	r.HandleFunc("/cart/add", handlers.AddToCart).Methods("POST", "OPTIONS")
+	r.HandleFunc("/cart", handlers.GetCart).Methods("GET", "OPTIONS")
+	r.HandleFunc("/cart/{id}", handlers.RemoveFromCart).Methods("DELETE", "OPTIONS")
+
 
 	if err := http.ListenAndServe(":4000", r); err != nil {
 		panic(err)
