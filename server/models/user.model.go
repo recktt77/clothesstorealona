@@ -6,4 +6,5 @@ type User struct {
 	Number   string `json:"number"`
 	Password string `json:"password"`
 	IsAdmin  bool   `json:"isAdmin"`
+	Cart     []int  `json:"cart"`
 }
