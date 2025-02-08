@@ -31,33 +31,32 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
 
-	var post models.Post
-	err := json.NewDecoder(r.Body).Decode(&post)
-	if err != nil {
-		fmt.Println("error of decoding JSON:", err)
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
+    var post models.Post
+    err := json.NewDecoder(r.Body).Decode(&post)
+    if err != nil {
+        fmt.Println("Ошибка парсинга JSON:", err)
+        http.Error(w, "Bad request", http.StatusBadRequest)
+        return
+    }
 
-	fmt.Printf("getting data: %+v\n", post)
+    if post.Title == "" || post.Link == "" || post.Body == "" || post.UserId == 0 {
+        http.Error(w, "Missing required fields", http.StatusBadRequest)
+        return
+    }
 
-	if post.Title == "" || post.Link == "" || post.Body == "" {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
-		return
-	}
+    post.Id = nextPostId
+    nextPostId++
+    posts[post.Id] = post
 
-	post.Id = nextPostId
-	nextPostId++
-	posts[post.Id] = post
-
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(post)
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(post)
 }
+
 
 func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
@@ -128,4 +127,27 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Post deleted"})
+}
+
+func GetUserPosts(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    userId, err := strconv.Atoi(r.URL.Query().Get("userId"))
+    if err != nil {
+        http.Error(w, "Invalid user ID", http.StatusBadRequest)
+        return
+    }
+
+    userPosts := []models.Post{}
+    for _, post := range posts {
+        if post.UserId == userId {
+            userPosts = append(userPosts, post)
+        }
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(userPosts)
 }

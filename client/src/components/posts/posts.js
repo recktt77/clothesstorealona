@@ -36,7 +36,7 @@ class Posts extends React.Component {
         return (
             <div className="posts">
                 {data.map((item) => (
-                    <div className="container-wrap">
+                    <div key={item.id} className="container-wrap">
                         <h2 className="title-post">{item.title}</h2>
                         <div className="item-post" id={item.id}>
                             <img className="img-post" src={item.link} />

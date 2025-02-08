@@ -25,12 +25,18 @@ export const loginUser = async (userData) => {
       throw new Error("Invalid login response");
     }
 
+    const { user } = response.data;
+    localStorage.setItem("userId", user.id);  // Сохраняем userId
+    localStorage.setItem("userEmail", user.email);
+    localStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
+
     return response.data;
   } catch (error) {
     console.error("Login error:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Login failed");
   }
 };
+
 
 
 export const isAdmin = async (email) => {
@@ -122,6 +128,40 @@ const API_URL_POSTS = "http://localhost:4000/posts";
 
 
 
+export const getUserPosts = async (userId) => {
+  userId = parseInt(userId); // 👈 Приводим userId к числу
+
+  if (isNaN(userId)) {
+      console.error("Ошибка: userId невалиден!", userId);
+      throw new Error("Invalid user ID");
+  }
+
+  try {
+      const response = await axios.get(`${API_URL}/user-posts?userId=${userId}`, {
+          headers: { "Content-Type": "application/json" },
+      });
+      return response.data;
+  } catch (error) {
+      console.error("Ошибка получения постов пользователя:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Ошибка получения постов пользователя");
+  }
+};
+
+
+export const addPost = async (userId, postData) => {
+  userId = parseInt(userId);
+  try {
+      const response = await axios.post(`${API_URL}/posts`, { userId, ...postData }, {
+          headers: { "Content-Type": "application/json" },
+      });
+      return response.data;
+  } catch (error) {
+      throw new Error(error.response?.data?.message || "Ошибка добавления поста");
+  }
+};
+
+
+
 export const getAllPosts = async () => {
   try {
     const response = await axios.get(API_URL_POSTS);
@@ -132,16 +172,6 @@ export const getAllPosts = async () => {
   }
 };
 
-export const addPost = async (postData) => {
-  try {
-    const response = await axios.post(API_URL_POSTS, postData);
-    console.log(response.data);
-    return response.data;
-  } catch (error) {
-    console.log(postData)
-    throw new Error(error.response?.data?.message || "Ошибка добавления поста");
-  }
-};
 
 export const updatePost = async (postId, updatedData) => {
   try {
@@ -158,5 +188,49 @@ export const deletePost = async (postId) => {
     return { message: "Пост удален" };
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка удаления поста");
+  }
+};
+
+
+
+
+
+export const addToCart = async (userId, goodId) => {
+  userId = parseInt(userId);
+  console.log("Отправка в API /cart/add:", { userId, goodId });
+  try {
+      const response = await axios.post(`${API_URL}/cart/add`, { userId, goodId }, {
+          headers: { "Content-Type": "application/json" },
+      });
+      console.log("Cart added to basket:", response.data);
+      return response.data;
+  } catch (error) {
+      console.error("error while adding:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "error while adding");
+  }
+};
+
+
+
+export const getCart = async (userId) => {
+  try {
+      const response = await axios.get(`${API_URL}/cart?userId=${userId}`, {
+          headers: { "Content-Type": "application/json" },
+      });
+      return response.data;
+  } catch (error) {
+      console.error("error while getting basket:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "error while etting basket");
+  }
+};
+
+export const removeFromCart = async (userId, goodId) => {
+  try {
+      await axios.delete(`${API_URL}/cart/${goodId}?userId=${userId}`);
+      console.log("good removed");
+      return { message: "removed" };
+  } catch (error) {
+      console.error("error while deleteing good:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "error while deleting goods");
   }
 };
