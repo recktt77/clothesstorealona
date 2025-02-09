@@ -20,11 +20,11 @@ const CardBar = () => {
                 />
                 <div>
                     <h2 className="user-name">{userEmail}</h2>
-                    <p className="user-role">{isAdmin ? "👑 Администратор" : "🛍️ Покупатель"}</p>
+                    <p className="user-role">{isAdmin ? "👑 Admin" : "🛍️ user"}</p>
                 </div>
             </div>
 
-            <button className="logout-button" onClick={handleLogout}>🚪 Выйти</button>
+            <button className="logout-button" onClick={handleLogout}>🚪 logout</button>
         </div>
     );
 };
