@@ -8,6 +8,7 @@ import NavBar from "./components/navigation/navbar";
 import Admin from "./pages/admin/admin";
 import Login from "../src/components/login/logining";
 import ProtectedRoute from "../src/components/protection/ProtectedRouts";
+import ChatAssistant from "./components/aiassistant/ChatAssistant";
 
 const App = () => {
     const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail") || "");
@@ -37,23 +38,28 @@ const App = () => {
     };
 
     return (
-        <Router>
-            <div>
-                <NavBar onLogout={handleLogout} userEmail={userEmail} isAdmin={isAdmin} onSubmit={handleUserLogin} />
+        <div className="app">
+            <Router>
+                <div>
+                    <NavBar onLogout={handleLogout} userEmail={userEmail} isAdmin={isAdmin} onSubmit={handleUserLogin} />
 
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/shop" element={<Shop />} />
-                    <Route path="/post" element={<Post />} />
-                    <Route path="/ownpage" element={<Ownpage />} />
-                    <Route path="/login" element={<Login onSubmit={handleUserLogin} />} />
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/shop" element={<Shop />} />
+                        <Route path="/post" element={<Post />} />
+                        <Route path="/ownpage" element={<Ownpage />} />
+                        <Route path="/login" element={<Login onSubmit={handleUserLogin} />} />
 
-                    <Route element={<ProtectedRoute isAdmin={isAdmin} />}>
-                        <Route path="/admin" element={<Admin />} />
-                    </Route>
-                </Routes>
-            </div>
-        </Router>
+                        <Route element={<ProtectedRoute isAdmin={isAdmin} />}>
+                            <Route path="/admin" element={<Admin />} />
+                        </Route>
+                    </Routes>
+                </div>
+            </Router>
+            <ChatAssistant />
+        </div>
+        
+        
     );
 };
 
