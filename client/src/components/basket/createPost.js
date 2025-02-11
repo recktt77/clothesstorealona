@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { addPost } from "../../api";
 import "./CreatePost.css"; 
 
@@ -7,6 +7,7 @@ const CreatePost = ({ onPostCreated }) => {
     const [link, setLink] = useState("");
     const [body, setBody] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
