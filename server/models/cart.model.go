@@ -1,6 +1,7 @@
 package models
 
 type Cart struct {
-	UserEmail int `bson:"userEmail"`
-	GoodId    int `bson:"goodId"`
+	UserEmail string `bson:"userEmail"`
+	GoodId    int    `bson:"goodId"`
+	Quantity  int    `bson:"quantity"`
 }
