@@ -14,22 +14,23 @@ const CardBasket = () => {
     const fetchCart = async () => {
         try {
             const cartItems = await getCart(userEmail);
-            console.log(cartItems);
-            setItems(cartItems || []); // ✅ Если API вернул `null`, заменяем на `[]`
+            console.log("Корзина загружена:", cartItems);
+            setItems(cartItems || []);
         } catch (error) {
             console.error("Ошибка загрузки корзины:", error);
-            setItems([]); // ✅ В случае ошибки не ломаем рендер, а показываем пустой массив
+            setItems([]);
         }
     };
+    
 
     const removeItem = async (id) => {
         try {
             await removeFromCart(userEmail, id);
-            setItems(prevItems => prevItems.filter(item => item.id !== id)); // ✅ Корректный state update
+            setItems(prevItems => prevItems.filter(item => item.goodId !== id));
         } catch (error) {
             console.error("Ошибка удаления товара:", error);
         }
-    };
+    };     
 
     return (
         <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-2xl">
