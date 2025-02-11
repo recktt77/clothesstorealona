@@ -46,7 +46,7 @@ class Catalog extends React.Component {
     render() {
         const { data, loading, error } = this.state;
 
-        if (loading) return <p>Loading...</p>;
+        if (loading) return <p>Loading..</p>;
         if (error) return <p>Error: {error}</p>;
         return (
             <div className="catalog">
