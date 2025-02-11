@@ -164,35 +164,45 @@ export const deletePost = async (postId) => {
 };
 
 export const addToCart = async (userEmail, goodId) => {
-  goodId = parseInt(goodId);
+  goodId = Number(goodId); // Преобразуем `goodId` в число
+  console.log(`Добавление в корзину: userEmail=${userEmail}, goodId=${goodId}`);
 
   try {
     const response = await axios.post(`${API_URL}/cart/add`, { userEmail, goodId }, {
       headers: { "Content-Type": "application/json" },
     });
+    console.log("Ответ от сервера:", response.data);
     return response.data;
   } catch (error) {
+    console.error("Ошибка добавления в корзину:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Ошибка добавления в корзину");
   }
 };
+
+
+
 
 export const getCart = async (userEmail) => {
   try {
     const response = await axios.get(`${API_URL}/cart?userEmail=${userEmail}`, {
       headers: { "Content-Type": "application/json" },
     });
-    console.log(userEmail, response);
+    console.log("Ответ от сервера (корзина):", response.data);
     return response.data;
   } catch (error) {
+    console.error("Ошибка получения корзины:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Ошибка получения корзины");
   }
 };
 
-export const removeFromCart = async (userId, goodId) => {
+
+export const removeFromCart = async (userEmail, goodId) => {
   try {
-    await axios.delete(`${API_URL}/cart/${goodId}?userId=${userId}`);
+    await axios.delete(`${API_URL}/cart/${goodId}?userEmail=${userEmail}`);
     return { message: "Товар удален из корзины" };
   } catch (error) {
+    console.error("Ошибка удаления товара:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Ошибка удаления товара из корзины");
   }
 };
+
