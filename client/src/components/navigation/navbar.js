@@ -40,9 +40,9 @@ class NavBar extends React.Component {
                 
                 {this.state.showLogReg ? ( 
                     <LogReg onSubmit={this.handleLoginSuccess} switching={this.handleJoinUsClick} />
-                ) : this.props.userId ? (
+                ) : this.props.userEmail ? (
                     <div className="loggedIn">
-                        <p>{this.props.userId}</p>
+                        <p>{this.props.userEmail}</p>
                         <Button buttoname="Logout" onClick={this.handleLogoutClick} />
                     </div>
                 ) : (
