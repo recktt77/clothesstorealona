@@ -29,13 +29,13 @@ class Catalog extends React.Component {
     }
 
     handleAddToCart = async (goodId) => {
-        const userId = localStorage.getItem("userId"); 
-        if (!userId) {
+        const userEmail = localStorage.getItem("userEmail"); 
+        if (!userEmail) {
             alert("Вы не вошли в аккаунт");
             return;
         }
         try {
-            await addToCart(userId, goodId);
+            await addToCart(userEmail, goodId);
             alert("Товар добавлен в корзину!");
         } catch (error) {
             alert(error.message);

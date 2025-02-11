@@ -26,7 +26,7 @@ export const loginUser = async (userData) => {
     }
 
     const { user } = response.data;
-    localStorage.setItem("userId", user.id);  // Сохраняем userId
+    localStorage.setItem("userId", user.id);
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
 
@@ -36,8 +36,6 @@ export const loginUser = async (userData) => {
     throw new Error(error.response?.data?.message || "Login failed");
   }
 };
-
-
 
 export const isAdmin = async (email) => {
   try {
@@ -54,18 +52,15 @@ export const isAdmin = async (email) => {
 };
 
 
-
-
 export const getAllGoods = async () => {
   return axios.get(`${API_URL}/goods`);
 };
 
 export const addGood = async (goodData) => {
   return axios.post(`${API_URL}/goods`, goodData, {
-    headers: { "Content-Type": "application/json" }, 
+    headers: { "Content-Type": "application/json" },
   });
 };
-
 
 export const updateGood = async (goodId, updatedData) => {
   return axios.put(`${API_URL}/goods/${goodId}`, updatedData);
@@ -74,10 +69,6 @@ export const updateGood = async (goodId, updatedData) => {
 export const deleteGood = async (goodId) => {
   return axios.delete(`${API_URL}/goods/${goodId}`);
 };
-
-
-
-//TODO
 
 export const listOfUsersForAdmin = async (adminEmail) => {
   try {
@@ -93,89 +84,70 @@ export const listOfUsersForAdmin = async (adminEmail) => {
 };
 
 
+export const getAllUsers = async () => {
+  return axios.get(`${API_URL}/users`);
+};
+
 export const addUser = async (userData) => {
-  try {
-    const response = await axios.post(`${API_URL}/register`, userData, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка добавления пользователя");
-  }
+  return axios.post(`${API_URL}/register`, userData, {
+    headers: { "Content-Type": "application/json" },
+  });
 };
 
-export const updateUser = async (userEmail, updatedData) => {
-  try {
-    const response = await axios.put(`${API_URL}/users/${userEmail}`, updatedData);
-    console.log("Update data: ", response.data);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка обновления пользователя");
-  }
+export const updateUser = async (userId, updatedData) => {
+  console.log(userId, updatedData)
+  return axios.put(`${API_URL}/users/${userId}`, updatedData, {
+    headers: { "Content-Type": "application/json" },
+  });
 };
 
-export const deleteUser = async (userEmail) => {
-  try {
-    await axios.delete(`${API_URL}/users/${userEmail}`);
-    return { message: "Пользователь удален" };
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Ошибка удаления пользователя");
-  }
+export const deleteUser = async (userId) => {
+  return axios.delete(`${API_URL}/users/${userId}`);
 };
+
 
 
 const API_URL_POSTS = "http://localhost:4000/posts";
 
 
 
-export const getUserPosts = async (userId) => {
-  userId = parseInt(userId); // 👈 Приводим userId к числу
-
-  if (isNaN(userId)) {
-      console.error("Ошибка: userId невалиден!", userId);
-      throw new Error("Invalid user ID");
-  }
-
-  try {
-      const response = await axios.get(`${API_URL}/user-posts?userId=${userId}`, {
-          headers: { "Content-Type": "application/json" },
-      });
-      return response.data;
-  } catch (error) {
-      console.error("Ошибка получения постов пользователя:", error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || "Ошибка получения постов пользователя");
-  }
-};
-
-
-export const addPost = async (userId, postData) => {
-  userId = parseInt(userId);
-  try {
-      const response = await axios.post(`${API_URL}/posts`, { userId, ...postData }, {
-          headers: { "Content-Type": "application/json" },
-      });
-      return response.data;
-  } catch (error) {
-      throw new Error(error.response?.data?.message || "Ошибка добавления поста");
-  }
-};
-
-
-
 export const getAllPosts = async () => {
   try {
-    const response = await axios.get(API_URL_POSTS);
-    console.log(response.data)
+    const response = await axios.get(`${API_URL}/posts`);
+    console.log(response);  
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка получения постов");
   }
 };
 
+export const getUserPosts = async (userEmail) => {
+  if (!userEmail) throw new Error("Invalid user email");
+
+  try {
+    const response = await axios.get(`${API_URL}/user-posts?userEmail=${userEmail}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Ошибка получения постов пользователя");
+  }
+};
+
+export const addPost = async (postData) => {
+  try {
+    const response = await axios.post(`${API_URL}/posts`, postData, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.message)
+    throw new Error(error.response?.data?.message || "Ошибка добавления поста");
+  }
+};
 
 export const updatePost = async (postId, updatedData) => {
   try {
-    const response = await axios.put(`${API_URL_POSTS}/${postId}`, updatedData);
+    console.log(updatedData)
+    const response = await axios.put(`${API_URL}/posts/${postId}`, updatedData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка обновления поста");
@@ -184,53 +156,42 @@ export const updatePost = async (postId, updatedData) => {
 
 export const deletePost = async (postId) => {
   try {
-    await axios.delete(`${API_URL_POSTS}/${postId}`);
+    await axios.delete(`${API_URL}/posts/${postId}`);
     return { message: "Пост удален" };
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка удаления поста");
   }
 };
 
+export const addToCart = async (userEmail, goodId) => {
+  goodId = parseInt(goodId);
 
-
-
-
-export const addToCart = async (userId, goodId) => {
-  userId = parseInt(userId);
-  console.log("Отправка в API /cart/add:", { userId, goodId });
   try {
-      const response = await axios.post(`${API_URL}/cart/add`, { userId, goodId }, {
-          headers: { "Content-Type": "application/json" },
-      });
-      console.log("Cart added to basket:", response.data);
-      return response.data;
+    const response = await axios.post(`${API_URL}/cart/add`, { userEmail, goodId }, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
   } catch (error) {
-      console.error("error while adding:", error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || "error while adding");
+    throw new Error(error.response?.data?.message || "Ошибка добавления в корзину");
   }
 };
 
-
-
-export const getCart = async (userId) => {
+export const getCart = async (userEmail) => {
   try {
-      const response = await axios.get(`${API_URL}/cart?userId=${userId}`, {
-          headers: { "Content-Type": "application/json" },
-      });
-      return response.data;
+    const response = await axios.get(`${API_URL}/cart?userEmail=${userEmail}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
   } catch (error) {
-      console.error("error while getting basket:", error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || "error while etting basket");
+    throw new Error(error.response?.data?.message || "Ошибка получения корзины");
   }
 };
 
 export const removeFromCart = async (userId, goodId) => {
   try {
-      await axios.delete(`${API_URL}/cart/${goodId}?userId=${userId}`);
-      console.log("good removed");
-      return { message: "removed" };
+    await axios.delete(`${API_URL}/cart/${goodId}?userId=${userId}`);
+    return { message: "Товар удален из корзины" };
   } catch (error) {
-      console.error("error while deleteing good:", error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || "error while deleting goods");
+    throw new Error(error.response?.data?.message || "Ошибка удаления товара из корзины");
   }
 };
