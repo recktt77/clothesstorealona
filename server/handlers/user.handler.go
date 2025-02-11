@@ -1,96 +1,138 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/recktt77/clothesstorealona/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	users      = make(map[int]models.User)
-	nextId     = 1
-)
+func GetLastUserID() (int, error) {
+	var lastUser models.User
+
+	// Находим пользователя с самым большим `id`
+	opts := options.FindOne().SetSort(bson.M{"id": -1})
+	err := collection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastUser)
+
+	if err == mongo.ErrNoDocuments {
+		return 0, nil // Если коллекция пустая, возвращаем 0
+	}
+	if err != nil {
+		return 0, err // Ошибка запроса
+	}
+
+	return lastUser.Id, nil // Возвращаем последний `id`
+}
 
 func UserRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
 		return
 	}
-	var user models.User
 
+	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		fmt.Println("Bad request")
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
+
+	// Проверяем, существует ли пользователь по Email или Number
 	if existingUser, _ := findUserByIdentifier(user.Email); existingUser != nil {
-		fmt.Println("User with this email already exists: ", user.Email)
 		http.Error(w, "User with this email already exists", http.StatusConflict)
 		return
 	}
-	user.Id = nextId
-	if nextId == 1 {
+	if existingUser, _ := findUserByIdentifier(user.Number); existingUser != nil {
+		http.Error(w, "User with this phone number already exists", http.StatusConflict)
+		return
+	}
+
+	lastID, err := GetLastUserID()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	user.Id = lastID + 1
+
+	// Назначаем администратора, если это первый пользователь
+	count, err := collection.CountDocuments(context.TODO(), bson.M{})
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if count == 0 {
 		user.IsAdmin = true
 	}
-	nextId++
-	users[user.Id] = user
+
+	// Вставляем пользователя в MongoDB
+	_, err = collection.InsertOne(context.TODO(), user)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"msg": "You are registered succesfully"})
+	json.NewEncoder(w).Encode(map[string]string{"msg": "You are registered successfully"})
 }
 
 func UserLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		fmt.Println("Login: Method not allowed")
 		http.Error(w, "Method not allowed!", http.StatusMethodNotAllowed)
 		return
 	}
+
 	var req struct {
 		Identifier string `json:"identifier"` // Email или Number
 		Password   string `json:"password"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		fmt.Println("Login: Bad request")
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
 	user, err := findUserByIdentifier(req.Identifier)
-	if err != nil {
-		fmt.Println("Login: Invalid email/number")
+	if err != nil || user == nil {
 		http.Error(w, "Invalid email/number", http.StatusUnauthorized)
 		return
 	}
 
 	if user.Password != req.Password {
-		fmt.Println("Login: Invalid password")
 		http.Error(w, "Invalid email/number or password", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("Login: You are logged in succesfully")
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"msg":  "You are logged in succesfully",
+		"msg":  "You are logged in successfully",
 		"user": user,
 	})
-
 }
 
 func findUserByIdentifier(identifier string) (*models.User, error) {
-	for _, user := range users {
-		if user.Email == identifier || user.Number == identifier {
-			fmt.Println("findUserByIdentifier: User found")
-			return &user, nil
-		}
+	var user models.User
+
+	filter := bson.M{
+		"$or": []bson.M{
+			{"email": identifier},
+			{"number": identifier},
+		},
 	}
-	fmt.Println("findUserByIdentifier: User not found")
-	return nil, errors.New("user not found")
+
+	err := collection.FindOne(context.TODO(), filter).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func CheckAdminStatus(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +148,7 @@ func CheckAdminStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := findUserByIdentifier(email)
-	if err != nil {
+	if err != nil || user == nil {
 		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
 		return
 	}
@@ -120,14 +162,26 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	userList := make([]models.User, 0, len(users))
-	for _, u := range users {
-		userList = append(userList, u)
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var users []models.User
+	for cursor.Next(context.TODO()) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			http.Error(w, `{"error": "Error decoding user"}`, http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(userList)
-
+	json.NewEncoder(w).Encode(users)
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -149,10 +203,15 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, exists := users[id]
-
-	if !exists {
+	filter := bson.M{"id": id}
+	var user models.User
+	err = collection.FindOne(context.TODO(), filter).Decode(&user)
+	if err == mongo.ErrNoDocuments {
 		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -168,14 +227,21 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Email = updatedData.Email
-	user.Number = updatedData.Number
-	user.IsAdmin = updatedData.IsAdmin
-	users[id] = user
+	// Обновляем данные в MongoDB
+	update := bson.M{"$set": bson.M{
+		"email":   updatedData.Email,
+		"number":  updatedData.Number,
+		"isAdmin": updatedData.IsAdmin,
+	}}
+
+	_, err = collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		http.Error(w, `{"error": "Database update error"}`, http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
-
+	json.NewEncoder(w).Encode(map[string]string{"message": "User updated successfully"})
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -184,6 +250,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Извлекаем email из пути (например, /users/{email})
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) < 3 || pathParts[2] == "" {
 		http.Error(w, `{"error": "Invalid request path"}`, http.StatusBadRequest)
@@ -192,16 +259,16 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	email := pathParts[2]
 
-	deleted := false
-	for id, user := range users {
-		if user.Email == email {
-			delete(users, id)
-			deleted = true
-			break
-		}
+	filter := bson.M{"email": email}
+
+	// Удаляем пользователя из MongoDB
+	result, err := collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
 	}
 
-	if !deleted {
+	if result.DeletedCount == 0 {
 		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
 		return
 	}

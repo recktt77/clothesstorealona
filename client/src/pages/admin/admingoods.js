@@ -70,7 +70,7 @@ const AdminGoods = () => {
         console.log("Updating good:", formattedGood);
 
         try {
-            await updateGood(editGood.id, formattedGood);
+            await updateGood(editGood.Id, formattedGood);
             setEditGood(null);
             fetchGoods();
         } catch (error) {
@@ -135,14 +135,14 @@ const AdminGoods = () => {
                     {Array.isArray(goods) && goods.length > 0 ? (
                         goods.map((good, index) => (
                             <tr key={index}>
-                                <td>{good.id || "N/A"}</td>
-                                <td>{good.title || "No Title"}</td>
-                                <td>${good.price || 0}</td>
-                                <td>{good.image ? <img src={good.image} alt={good.title} width="50" /> : "No Image"}</td>
-                                <td>{good.category || "No Category"}</td>
+                                <td>{good.Id || "N/A"}</td>
+                                <td>{good.Title || "No Title"}</td>
+                                <td>${good.Price || 0}</td>
+                                <td>{good.Image ? <img src={good.Image} alt={good.Title} width="50" /> : "No Image"}</td>
+                                <td>{good.Category || "No Category"}</td>
                                 <td>
                                     <button className="buttonWight" onClick={() => setEditGood(good)}>Edit</button>
-                                    <button className="buttonWight" onClick={() => handleDeleteGood(good.id)}>Delete</button>
+                                    <button className="buttonWight" onClick={() => handleDeleteGood(good.Id)}>Delete</button>
                                 </td>
                             </tr>
                         ))
