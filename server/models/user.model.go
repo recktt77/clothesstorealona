@@ -1,10 +1,10 @@
 package models
 
 type User struct {
-	Id       int    `json:"id"`
-	Email    string `json:"email"`
-	Number   string `json:"number"`
-	Password string `json:"password"`
-	IsAdmin  bool   `json:"isAdmin"`
-	Cart     []int  `json:"cart"`
+	Id       int    `bson:"id"`
+	Email    string `bson:"email"`
+	Number   string `bson:"number"`
+	Password string `bson:"password"`
+	IsAdmin  bool   `bson:"isAdmin"`
+	Cart     []int  `bson:"cart"`
 }
