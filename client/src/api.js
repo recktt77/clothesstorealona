@@ -181,6 +181,7 @@ export const getCart = async (userEmail) => {
     const response = await axios.get(`${API_URL}/cart?userEmail=${userEmail}`, {
       headers: { "Content-Type": "application/json" },
     });
+    console.log(userEmail, response);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка получения корзины");
