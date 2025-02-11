@@ -20,13 +20,11 @@ class NavBar extends React.Component {
     }
 
     handleLoginSuccess(email, isAdmin) {
-        console.log("Login successful in NavBar:", email, "Admin:", isAdmin);
-        this.setState({ showLogReg: false }); 
+        this.setState({ showLogReg: false });
         this.props.onSubmit(email, isAdmin);
     }
 
     handleLogoutClick() {
-        console.log("Logout button clicked!");
         if (this.props.onLogout) {
             this.props.onLogout();
         } else {
@@ -42,9 +40,9 @@ class NavBar extends React.Component {
                 
                 {this.state.showLogReg ? ( 
                     <LogReg onSubmit={this.handleLoginSuccess} switching={this.handleJoinUsClick} />
-                ) : this.props.userEmail ? (
+                ) : this.props.userId ? (
                     <div className="loggedIn">
-                        <p>{this.props.userEmail}</p>
+                        <p>{this.props.userId}</p>
                         <Button buttoname="Logout" onClick={this.handleLogoutClick} />
                     </div>
                 ) : (
