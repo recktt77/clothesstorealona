@@ -30,7 +30,7 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	}
 	// Найти пользователя по email
 	var user models.User
-	fmt.Println(req.UserEmail)
+	fmt.Println(req.UserEmail, req.GoodId)
 	err := collection.FindOne(context.TODO(), bson.M{"email": req.UserEmail}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -81,11 +81,13 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User email is required", http.StatusBadRequest)
 		return
 	}
-
+	fmt.Println(userEmail)
 	// Ищем пользователя по email
 	var user models.User
-	filter := bson.M{"email": userEmail}
-	err := collection.FindOne(context.TODO(), filter).Decode(&user)
+	filter := bson.M{"userEmail": userEmail}
+	err := cartCollection.FindOne(context.TODO(), filter).Decode(&user)
+	count, _ := cartCollection.CountDocuments(context.TODO(), filter)
+	fmt.Println("User count: ", count)
 	if err == mongo.ErrNoDocuments {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -95,8 +97,10 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получаем товары из корзины пользователя
-	cartFilter := bson.M{"userId": user.Id}
+	cartFilter := bson.M{"userEmail": user.Email}
 	cursor, err := cartCollection.Find(context.TODO(), cartFilter)
+	countCart, _ := cartCollection.CountDocuments(context.TODO(), cartFilter)
+	fmt.Println("Count cart: ", countCart)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -117,7 +121,6 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 			goods = append(goods, good)
 		}
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(goods)
 }
