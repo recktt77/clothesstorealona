@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/recktt77/clothesstorealona/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -28,47 +29,71 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
-	// Найти пользователя по email
+
+	ctx := r.Context()
+
+	// Проверить существование пользователя
 	var user models.User
-	fmt.Println(req.UserEmail, req.GoodId)
-	err := collection.FindOne(context.TODO(), bson.M{"email": req.UserEmail}).Decode(&user)
+	err := collection.FindOne(ctx, bson.M{"email": req.UserEmail}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	} else if err != nil {
+		log.Println("Database error:", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Проверить, существует ли товар
+	// Проверить существование товара
 	var good models.Good
-	err = goodsCollection.FindOne(context.TODO(), bson.M{"id": req.GoodId}).Decode(&good)
+	err = goodsCollection.FindOne(ctx, bson.M{"id": req.GoodId}).Decode(&good)
 	if err == mongo.ErrNoDocuments {
+		log.Println("Ошибка: товар не найден. ID:", req.GoodId)
 		http.Error(w, "Good not found", http.StatusNotFound)
 		return
 	} else if err != nil {
+		log.Println("Database error:", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Проверить, есть ли уже этот товар в корзине
-	existingFilter := bson.M{"userEmail": user.Email, "goodId": req.GoodId}
-	count, _ := cartCollection.CountDocuments(context.TODO(), existingFilter)
-	if count > 0 {
-		http.Error(w, "Item already in cart", http.StatusConflict)
+
+	// Проверить, есть ли товар уже в корзине
+	existingFilter := bson.M{"userEmail": req.UserEmail, "goodId": req.GoodId}
+	count, err := cartCollection.CountDocuments(ctx, existingFilter)
+	if err != nil {
+		log.Println("CountDocuments error:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
+	if count > 0 {
+		// Обновляем количество товара
+		update := bson.M{"$inc": bson.M{"quantity": 1}}
+		_, err := cartCollection.UpdateOne(ctx, existingFilter, update)
+		if err != nil {
+			log.Println("UpdateOne error:", err)
+			http.Error(w, "Database update error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Updated item quantity in cart"})
+		return
+	}
+	
+
 	// Добавить товар в корзину
-	_, err = cartCollection.InsertOne(context.TODO(), bson.M{"userEmail": user.Email, "goodId": req.GoodId})
+	_, err = cartCollection.InsertOne(ctx, bson.M{"userEmail": req.UserEmail, "goodId": req.GoodId, "quantity": 1})
 	if err != nil {
+		log.Println("InsertOne error:", err)
 		http.Error(w, "Database insert error", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Added to cart")
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Added to cart"})
 }
+
 
 func GetCart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -81,27 +106,14 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User email is required", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(userEmail)
-	// Ищем пользователя по email
-	var user models.User
-	filter := bson.M{"userEmail": userEmail}
-	err := cartCollection.FindOne(context.TODO(), filter).Decode(&user)
-	count, _ := cartCollection.CountDocuments(context.TODO(), filter)
-	fmt.Println("User count: ", count)
-	if err == mongo.ErrNoDocuments {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	} else if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
 
-	// Получаем товары из корзины пользователя
-	cartFilter := bson.M{"userEmail": user.Email}
+	fmt.Println("Получение корзины для:", userEmail)
+
+	// Получаем товары из корзины
+	cartFilter := bson.M{"userEmail": userEmail}
 	cursor, err := cartCollection.Find(context.TODO(), cartFilter)
-	countCart, _ := cartCollection.CountDocuments(context.TODO(), cartFilter)
-	fmt.Println("Count cart: ", countCart)
 	if err != nil {
+		log.Println("Ошибка получения корзины:", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -109,21 +121,38 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 
 	var cartItems []models.Cart
 	if err := cursor.All(context.TODO(), &cartItems); err != nil {
+		log.Println("Ошибка декодирования корзины:", err)
 		http.Error(w, "Error decoding cart items", http.StatusInternalServerError)
 		return
 	}
 
+	if len(cartItems) == 0 {
+		fmt.Println("Корзина пуста")
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode([]models.Good{})
+		return
+	}
+
 	// Получаем детали товаров
-	var goods []models.Good
+	var itemsWithDetails []map[string]interface{}
 	for _, item := range cartItems {
 		var good models.Good
 		if err := goodsCollection.FindOne(context.TODO(), bson.M{"id": item.GoodId}).Decode(&good); err == nil {
-			goods = append(goods, good)
+			itemData := map[string]interface{}{
+				"id":       good.Id,
+				"title":    good.Title,
+				"price":    good.Price,
+				"image":    good.Image,
+				"quantity": item.Quantity, // Теперь передаём количество товара
+			}
+			itemsWithDetails = append(itemsWithDetails, itemData)
 		}
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(goods)
+	json.NewEncoder(w).Encode(itemsWithDetails)
 }
+
 
 func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
@@ -131,26 +160,47 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 3 {
-		http.Error(w, "ID is required", http.StatusBadRequest)
-		return
-	}
-
-	goodId, err := strconv.Atoi(pathParts[2])
+	// Получаем параметры из URL
+	vars := mux.Vars(r)
+	goodId, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "Invalid ID format", http.StatusBadRequest)
 		return
 	}
 
-	userId, err := strconv.Atoi(r.URL.Query().Get("userId"))
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+	// Получаем email пользователя из запроса
+	userEmail := r.URL.Query().Get("userEmail")
+	if userEmail == "" {
+		http.Error(w, "User email is required", http.StatusBadRequest)
 		return
 	}
 
-	// Удаляем товар из корзины
-	filter := bson.M{"userId": userId, "goodId": goodId}
+	// Проверяем, есть ли товар в корзине
+	filter := bson.M{"userEmail": userEmail, "goodId": goodId}
+	var cartItem models.Cart
+	err = cartCollection.FindOne(context.TODO(), filter).Decode(&cartItem)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, "Item not found in cart", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Если количество товара > 1, уменьшаем количество
+	if cartItem.Quantity > 1 {
+		update := bson.M{"$inc": bson.M{"quantity": -1}}
+		_, err := cartCollection.UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			http.Error(w, "Database update error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Reduced quantity in cart"})
+		return
+	}
+
+	// Если количество = 1, удаляем товар из корзины
 	result, err := cartCollection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)

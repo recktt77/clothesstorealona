@@ -6,7 +6,7 @@ const Payment = () => {
     const [expDate, setExpDate] = useState("");
   
     const handlePayment = () => {
-      alert("Оплата успешно проведена!");
+      alert("payed successfuly!");
     };
   
     return (
