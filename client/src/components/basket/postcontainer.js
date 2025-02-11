@@ -2,34 +2,33 @@ import React, { useState, useEffect } from "react";
 import { getUserPosts } from "../../api";
 
 const PostContainer = () => {
-    const [posts, setPosts] = useState([]);
-    let userId = localStorage.getItem("userId");
+    const [posts, setPosts] = useState([]); // ✅ Инициализируем `posts` как массив
+    const userEmail = localStorage.getItem("userEmail"); // Получаем email пользователя
 
     useEffect(() => {
-        if (userId) {
+        if (userEmail) {
             fetchPosts();
         }
-    }, [userId]);
+    }, [userEmail]);
 
     const fetchPosts = async () => {
-        userId = parseInt(userId);
-
-        if (isNaN(userId)) {
-            console.error("Ошибка: userId не определен!", userId);
+        if (!userEmail) {
+            console.error("Ошибка: userEmail не определен!", userEmail);
             return;
         }
 
         try {
-            const userPosts = await getUserPosts(userId);
-            setPosts(userPosts);
+            const userPosts = await getUserPosts(userEmail);
+            setPosts(userPosts || []); // ✅ Гарантируем, что `posts` всегда массив
         } catch (error) {
             console.error("Ошибка загрузки постов пользователя:", error);
+            setPosts([]); // ✅ В случае ошибки `posts` остается пустым массивом
         }
     };
 
     return (
         <div className="bg-white p-4 shadow-md rounded-lg w-full">
-            {posts.length === 0 ? <p>there is no posts</p> : (
+            {posts.length === 0 ? <p>There are no posts</p> : (
                 <div className="grid grid-cols-2 gap-2">
                     {posts.map(post => (
                         <div key={post.id} className="border p-2 rounded-lg">

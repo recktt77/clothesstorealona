@@ -14,21 +14,21 @@ const Login = ({ onSubmit }) => {
 
     try {
       const response = await loginUser({ identifier: email, password });
-
       if (!response || !response.user) {
+        console.log("Invalid response from server");
         throw new Error("Invalid response from server");
       }
 
       const { user } = response;
       const adminStatus = await isAdmin(email);
-
-      console.log("Login successful:", user.email, "Admin:", adminStatus);
+      console.log(user);
+      console.log("Login successful:", user.Email, "Admin:", adminStatus);
 
       localStorage.setItem("token", "user-token");
       localStorage.setItem("isAdmin", adminStatus ? "true" : "false");
-      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem("userEmail", user.Email);
 
-      onSubmit(user.email, adminStatus);
+      onSubmit(user.Email, adminStatus);
 
       navigate("/", { replace: true });
 

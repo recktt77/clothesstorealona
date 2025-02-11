@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,12 +9,27 @@ import (
 	"strings"
 
 	"github.com/recktt77/clothesstorealona/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	goods      = make(map[int]models.Good)
-	nextGoodID = 1
-)
+func GetLastGoodID() (int, error) {
+	var lastGood models.Good
+
+	// Находим пользователя с самым большим `id`
+	opts := options.FindOne().SetSort(bson.M{"id": -1})
+	err := goodsCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastGood)
+
+	if err == mongo.ErrNoDocuments {
+		return 0, nil // Если коллекция пустая, возвращаем 0
+	}
+	if err != nil {
+		return 0, err // Ошибка запроса
+	}
+
+	return lastGood.Id, nil // Возвращаем последний `id`
+}
 
 func GetAllGoods(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -21,13 +37,25 @@ func GetAllGoods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	goodsList := make([]models.Good, 0, len(goods))
-	for _, good := range goods {
-		goodsList = append(goodsList, good)
+	cursor, err := goodsCollection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var goods []models.Good
+	for cursor.Next(context.TODO()) {
+		var good models.Good
+		if err := cursor.Decode(&good); err != nil {
+			http.Error(w, `{"error": "Error decoding good"}`, http.StatusInternalServerError)
+			return
+		}
+		goods = append(goods, good)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(goodsList)
+	json.NewEncoder(w).Encode(goods)
 }
 
 func AddGood(w http.ResponseWriter, r *http.Request) {
@@ -51,9 +79,18 @@ func AddGood(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	good.Id = nextGoodID
-	nextGoodID++
-	goods[good.Id] = good
+	lastID, err := GetLastGoodID()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	good.Id = lastID + 1
+	_, err = goodsCollection.InsertOne(context.TODO(), good)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(good)
@@ -77,26 +114,47 @@ func UpdateGood(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingGood, exists := goods[id]
-	if !exists {
-		http.Error(w, "Good not found", http.StatusNotFound)
+	filter := bson.M{"id": id}
+	var good models.Good
+	err = goodsCollection.FindOne(context.TODO(), filter).Decode(&good)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, `{"error": "Good not found"}`, http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
 		return
 	}
 
-	var updatedGood models.Good
-	if err := json.NewDecoder(r.Body).Decode(&updatedGood); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	var updatedData struct {
+		Title    string `json:"title"`
+		Price    int    `json:"price"`
+		Image    string `json:"image"`
+		Category string `json:"category"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&updatedData); err != nil {
+		http.Error(w, `{"error": "Invalid JSON format"}`, http.StatusBadRequest)
 		return
 	}
 
-	updatedGood.Id = existingGood.Id
+	// Обновляем данные в MongoDB
+	update := bson.M{"$set": bson.M{
+		"title":    updatedData.Title,
+		"price":    updatedData.Price,
+		"image":    updatedData.Image,
+		"category": updatedData.Category,
+	}}
 
-	goods[id] = updatedGood
-
-	fmt.Println("Good updated successfully:", updatedGood)
+	_, err = goodsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		http.Error(w, `{"error": "Database update error"}`, http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedGood)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Good updated successfully"})
+
 }
 
 func DeleteGood(w http.ResponseWriter, r *http.Request) {
@@ -117,15 +175,20 @@ func DeleteGood(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, exists := goods[id]; !exists {
-		http.Error(w, "Good not found", http.StatusNotFound)
+	filter := bson.M{"id": id}
+
+	result, err := goodsCollection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
 		return
 	}
 
-	delete(goods, id)
-
-	fmt.Println("Good deleted successfully with ID:", id)
+	if result.DeletedCount == 0 {
+		http.Error(w, `{"error": "Good not found"}`, http.StatusNotFound)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Good deleted"})
+	json.NewEncoder(w).Encode(map[string]string{"message": "Good deleted successfully"})
+
 }

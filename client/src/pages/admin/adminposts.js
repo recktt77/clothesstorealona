@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "./admin.css";
 import { getAllPosts, addPost, updatePost, deletePost } from "../../api";
+import App from "../../App"
 
 const AdminPosts = () => {
     const [posts, setPosts] = useState(null);
+    const userEmail = localStorage.getItem("userEmail");
     const [newPost, setNewPost] = useState({ title: "", link: "", body: "", likes: 0 });
     const [editPost, setEditPost] = useState(null);
     const [aaddPost, setAddPost] = useState(false)
@@ -25,6 +27,7 @@ const AdminPosts = () => {
     const handleAddPost = async () => {
         try {
             await addPost({
+                userEmail: userEmail,
                 title: newPost.title,
                 link: newPost.link,
                 body: newPost.body,
