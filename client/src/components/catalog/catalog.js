@@ -35,6 +35,7 @@ class Catalog extends React.Component {
             return;
         }
         try {
+            console.log(goodId)
             await addToCart(userEmail, goodId);
             alert("Товар добавлен в корзину!");
         } catch (error) {
@@ -50,11 +51,11 @@ class Catalog extends React.Component {
         return (
             <div className="catalog">
                 {data.map((item) => (
-                    <div className="item" id={item.id} key={item.id}>
-                        <img src={item.image} alt={item.title} />
-                        <h2 className="title">{item.title}</h2>
-                        <h3 className="price">{item.price}</h3>
-                        <button className="buttonWight" onClick={() => this.handleAddToCart(item.id)}>add to basket</button>
+                    <div className="item" id={item.id} key={item.Id}>
+                        <img src={item.image} alt={item.Title} />
+                        <h2 className="title">{item.Title}</h2>
+                        <h3 className="price">{item.Price}</h3>
+                        <button className="buttonWight" onClick={() => this.handleAddToCart(item.Id)}>add to basket</button>
                     </div>
                 ))}
             </div>

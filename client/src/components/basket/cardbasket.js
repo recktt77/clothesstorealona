@@ -14,6 +14,7 @@ const CardBasket = () => {
     const fetchCart = async () => {
         try {
             const cartItems = await getCart(userEmail);
+            console.log(cartItems);
             setItems(cartItems || []); // ✅ Если API вернул `null`, заменяем на `[]`
         } catch (error) {
             console.error("Ошибка загрузки корзины:", error);
