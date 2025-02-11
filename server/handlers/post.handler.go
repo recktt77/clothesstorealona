@@ -1,19 +1,34 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/recktt77/clothesstorealona/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	posts      = make(map[int]models.Post)
-	nextPostId = 1
-)
+func GetLastPostID() (int, error) {
+	var lastPost models.Post
+
+	// Находим пользователя с самым большим `id`
+	opts := options.FindOne().SetSort(bson.M{"id": -1})
+	err := postsCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastPost)
+
+	if err == mongo.ErrNoDocuments {
+		return 0, nil // Если коллекция пустая, возвращаем 0
+	}
+	if err != nil {
+		return 0, err // Ошибка запроса
+	}
+
+	return lastPost.Id, nil // Возвращаем последний `id`
+}
 
 func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -21,42 +36,61 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postsList := make([]models.Post, 0, len(posts))
-	for _, post := range posts {
-		postsList = append(postsList, post)
+	cursor, err := postsCollection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var posts []models.Post
+	for cursor.Next(context.TODO()) {
+		var post models.Post
+		if err := cursor.Decode(&post); err != nil {
+			http.Error(w, "Error decoding post", http.StatusInternalServerError)
+			return
+		}
+		posts = append(posts, post)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(postsList)
+	json.NewEncoder(w).Encode(posts)
 }
 
 func AddPost(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    var post models.Post
-    err := json.NewDecoder(r.Body).Decode(&post)
-    if err != nil {
-        fmt.Println("Ошибка парсинга JSON:", err)
-        http.Error(w, "Bad request", http.StatusBadRequest)
-        return
-    }
+	var post models.Post
+	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
 
-    if post.Title == "" || post.Link == "" || post.Body == "" || post.UserId == 0 {
-        http.Error(w, "Missing required fields", http.StatusBadRequest)
-        return
-    }
+	if post.Title == "" || post.Link == "" || post.Body == "" {
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
 
-    post.Id = nextPostId
-    nextPostId++
-    posts[post.Id] = post
+	lastID, err := GetLastPostID()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(post)
+	post.Id = lastID + 1
+
+	_, err = postsCollection.InsertOne(context.TODO(), post)
+	if err != nil {
+		http.Error(w, "Database insert error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(post)
 }
-
 
 func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
@@ -76,26 +110,46 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingPost, exists := posts[id]
-	if !exists {
-		http.Error(w, "Post not found", http.StatusNotFound)
+	filter := bson.M{"id": id}
+	var post models.Post
+	err = postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, `{"error": "Post not found"}`, http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
 		return
 	}
 
-	var updatedPost models.Post
-	if err := json.NewDecoder(r.Body).Decode(&updatedPost); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+	var updatedData struct {
+		Title string `json:"title"`
+		Link  string `json:"link"`
+		Body  string `json:"body"`
+		Likes int    `json:"likes"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&updatedData); err != nil {
+		http.Error(w, `{"error": "Invalid JSON format"}`, http.StatusBadRequest)
 		return
 	}
 
-	updatedPost.Id = existingPost.Id
+	update := bson.M{"$set": bson.M{
+		"title": updatedData.Title,
+		"link":  updatedData.Link,
+		"body":  updatedData.Body,
+		"likes": updatedData.Likes,
+	}}
 
-	posts[id] = updatedPost
-
-	fmt.Println("Post updated successfully:", updatedPost)
+	_, err = postsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		http.Error(w, `{"error": "Database update error"}`, http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedPost)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Post updated successfully"})
+
 }
 
 func DeletePost(w http.ResponseWriter, r *http.Request) {
@@ -116,38 +170,53 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, exists := posts[id]; !exists {
-		http.Error(w, "Post not found", http.StatusNotFound)
+	filter := bson.M{"id": id}
+	result, err := postsCollection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	delete(posts, id)
-
-	fmt.Println("Post deleted successfully with ID:", id)
+	if result.DeletedCount == 0 {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Post deleted"})
 }
 
 func GetUserPosts(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    userId, err := strconv.Atoi(r.URL.Query().Get("userId"))
-    if err != nil {
-        http.Error(w, "Invalid user ID", http.StatusBadRequest)
-        return
-    }
+	userEmail := r.URL.Query().Get("userEmail")
+	if userEmail == "" {
+		http.Error(w, "User email is required", http.StatusBadRequest)
+		return
+	}
 
-    userPosts := []models.Post{}
-    for _, post := range posts {
-        if post.UserId == userId {
-            userPosts = append(userPosts, post)
-        }
-    }
+	filter := bson.M{"useremail": userEmail}
+	cursor, err := postsCollection.Find(context.TODO(), filter)
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(userPosts)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var userPosts []models.Post
+	for cursor.Next(context.TODO()) {
+		var post models.Post
+		if err := cursor.Decode(&post); err != nil {
+			http.Error(w, "Error decoding post", http.StatusInternalServerError)
+			return
+		}
+		userPosts = append(userPosts, post)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userPosts)
 }

@@ -1,9 +1,9 @@
 package models
 
 type Good struct {
-	Id       int    `json:"id"`
-	Title    string `json:"title"`
-	Price    int    `json:"price"`
-	Image    string `json:"image"`
-	Category string `json:"category"`
+	Id       int    `bson:"id"`
+	Title    string `bson:"title"`
+	Price    int    `bson:"price"`
+	Image    string `bson:"image"`
+	Category string `bson:"category"`
 }

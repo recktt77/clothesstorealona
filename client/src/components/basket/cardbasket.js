@@ -2,28 +2,29 @@ import React, { useState, useEffect } from "react";
 import { getCart, removeFromCart } from "../../api";
 
 const CardBasket = () => {
-    const [items, setItems] = useState([]);
-    const userId = localStorage.getItem("userId");
+    const [items, setItems] = useState([]); // ✅ Гарантируем, что `items` всегда массив
+    const userEmail = localStorage.getItem("userEmail");
 
     useEffect(() => {
-        if (userId) {
+        if (userEmail) {
             fetchCart();
         }
-    }, [userId]);
+    }, [userEmail]);
 
     const fetchCart = async () => {
         try {
-            const cartItems = await getCart(userId);
-            setItems(cartItems);
+            const cartItems = await getCart(userEmail);
+            setItems(cartItems || []); // ✅ Если API вернул `null`, заменяем на `[]`
         } catch (error) {
             console.error("Ошибка загрузки корзины:", error);
+            setItems([]); // ✅ В случае ошибки не ломаем рендер, а показываем пустой массив
         }
     };
 
     const removeItem = async (id) => {
         try {
-            await removeFromCart(userId, id);
-            setItems(items.filter(item => item.id !== id));
+            await removeFromCart(userEmail, id);
+            setItems(prevItems => prevItems.filter(item => item.id !== id)); // ✅ Корректный state update
         } catch (error) {
             console.error("Ошибка удаления товара:", error);
         }
@@ -34,7 +35,7 @@ const CardBasket = () => {
             <h2 className="text-xl font-bold mb-4 text-gray-800">🛒 your basket</h2>
 
             {items.length === 0 ? (
-                <p className="text-gray-500 text-center">Basket is epmty 😔</p>
+                <p className="text-gray-500 text-center">Basket is empty 😔</p>
             ) : (
                 <ul className="divide-y divide-gray-200">
                     {items.map(item => (
@@ -48,7 +49,7 @@ const CardBasket = () => {
                             </div>
                             <button
                                 onClick={() => removeItem(item.id)}
-                                className=" buttonWight bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-300"
+                                className="buttonWight bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-300"
                             >
                                 ❌ delete
                             </button>

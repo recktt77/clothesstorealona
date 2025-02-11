@@ -11,8 +11,8 @@ const CreatePost = ({ onPostCreated }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const userId = localStorage.getItem("userId");
-        if (!userId) {
+        const userEmail = localStorage.getItem("userEmail");
+        if (!userEmail) {
             alert("Вы не вошли в аккаунт!");
             return;
         }
@@ -24,7 +24,7 @@ const CreatePost = ({ onPostCreated }) => {
 
         setIsSubmitting(true);
         try {
-            const newPost = await addPost(parseInt(userId), { title, link, body, likes: 0 });
+            const newPost = await addPost({ userEmail, title, link, body, likes: 0 });
             alert("✅ Пост успешно добавлен!");
             setTitle("");
             setLink("");

@@ -45,7 +45,7 @@ const AdminUsers = () => {
         if (!editUser) return;
         console.log("Editing this user: ", editUser);
         try {
-            await updateUser(editUser.id, {
+            await updateUser(editUser.Id, {
                 email: editUser.email,
                 number: editUser.number,
                 isAdmin: editUser.isAdmin,
@@ -53,7 +53,7 @@ const AdminUsers = () => {
 
             setUsers((prevUsers) =>
                 prevUsers.map((user) =>
-                    user.email === editUser.email ? { ...user, ...editUser } : user
+                    user.Email === editUser.Email ? { ...user, ...editUser } : user
                 )
             );
 
@@ -116,13 +116,13 @@ const AdminUsers = () => {
                     {Array.isArray(users) && users.length > 0 ? (
                         users.map((user, index) => (
                             <tr key={index}>
-                                <td>{user.id || "N/A"}</td>
-                                <td>{user.email || "No Email"}</td>
-                                <td>{user.number || 0}</td>
-                                <td>{user.isAdmin ? "✅ Yes" : "❌ No"}</td>
+                                <td>{user.Id || "N/A"}</td>
+                                <td>{user.Email || "No Email"}</td>
+                                <td>{user.Number || 0}</td>
+                                <td>{user.IsAdmin ? "✅ Yes" : "❌ No"}</td>
                                 <td>
                                     <button className="buttonWight" onClick={() => setEditUser(user)}>Edit</button>
-                                    <button className="buttonWight" onClick={() => handleDeleteUser(user.email)}>Delete</button>
+                                    <button className="buttonWight" onClick={() => handleDeleteUser(user.Email)}>Delete</button>
                                 </td>
                             </tr>
                         ))

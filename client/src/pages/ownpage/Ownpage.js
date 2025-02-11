@@ -9,17 +9,17 @@ import "./Ownpage.css"
 
 const Ownpage = () => {
   const [posts, setPosts] = useState([]);
-  const userId = localStorage.getItem("userId");
+  const userEmail = localStorage.getItem("userEmail");
 
   useEffect(() => {
-      if (userId) {
+      if (userEmail) {
           fetchUserPosts();
       }
-  }, [userId]);
+  }, [userEmail]);
 
   const fetchUserPosts = async () => {
       try {
-          const userPosts = await getUserPosts(userId);
+          const userPosts = await getUserPosts(userEmail);
           setPosts(userPosts);
       } catch (error) {
           console.error("Ошибка загрузки постов пользователя:", error);
