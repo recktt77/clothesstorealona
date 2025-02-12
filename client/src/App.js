@@ -13,12 +13,14 @@ import ChatAssistant from "./components/aiassistant/ChatAssistant";
 const App = () => {
     const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail") || "");
     const [isAdmin, setIsAdmin] = useState(localStorage.getItem("isAdmin") === "true");
+    const [basket, setBasket] = useState([]);
+    const [posts, setPosts] = useState([]);
+
 
     useEffect(() => {
         console.log("App state updated:", userEmail, isAdmin);
     }, [userEmail, isAdmin]);
 
-    // Функция входа пользователя
     const handleUserLogin = (email, isAdmin) => {
         console.log("User logged in:", email, isAdmin);
         localStorage.setItem("userEmail", email);
@@ -27,23 +29,30 @@ const App = () => {
         setIsAdmin(isAdmin);
     };
 
-    // Функция выхода пользователя
     const handleLogout = () => {
         console.log("Logging out...");
         localStorage.removeItem("userEmail");
-        localStorage.removeItem("isAdmin"); 
+        localStorage.removeItem("isAdmin");
 
         setUserEmail("");
         setIsAdmin(false);
-        window.location.reload();
+        setBasket([]);
+        setPosts([]); 
     };
 
     return (
         <div className="app">
             <Router>
                 <div>
-                    {/* Навигационная панель */}
-                    <NavBar onLogout={handleLogout} userEmail={userEmail} isAdmin={isAdmin} onSubmit={handleUserLogin} />
+                    <NavBar
+                        onLogout={handleLogout}
+                        userEmail={userEmail}
+                        isAdmin={isAdmin}
+                        onSubmit={handleUserLogin}
+                        clearBasket={() => setBasket([])}
+                        clearPosts={() => setPosts([])}
+                    />
+
 
                     <Routes>
                         <Route path="/" element={<Home />} />
@@ -52,7 +61,6 @@ const App = () => {
                         <Route path="/ownpage" element={<Ownpage />} />
                         <Route path="/login" element={<Login onSubmit={handleUserLogin} />} />
 
-                        {/* Доступ к админке только для админа */}
                         <Route element={<ProtectedRoute isAdmin={isAdmin} />}>
                             <Route path="/admin" element={<Admin />} />
                         </Route>
@@ -60,7 +68,6 @@ const App = () => {
                 </div>
             </Router>
             
-            {/* Чат-ассистент */}
             <ChatAssistant />
         </div>
     );

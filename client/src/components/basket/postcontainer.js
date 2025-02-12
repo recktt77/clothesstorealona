@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react";
 import { getUserPosts } from "../../api";
 
 const PostContainer = () => {
-    const [posts, setPosts] = useState([]); // ✅ Инициализируем `posts` как массив
-    const userEmail = localStorage.getItem("userEmail"); // Получаем email пользователя
+    const [posts, setPosts] = useState([]);
+    const userEmail = localStorage.getItem("userEmail");
 
     useEffect(() => {
-        if (userEmail) {
+        if (!userEmail) {
+            setPosts([]);
+        } else {
             fetchPosts();
         }
     }, [userEmail]);
+    
 
     const fetchPosts = async () => {
         if (!userEmail) {
@@ -19,10 +22,10 @@ const PostContainer = () => {
 
         try {
             const userPosts = await getUserPosts(userEmail);
-            setPosts(userPosts || []); // ✅ Гарантируем, что `posts` всегда массив
+            setPosts(userPosts || []);
         } catch (error) {
             console.error("Ошибка загрузки постов пользователя:", error);
-            setPosts([]); // ✅ В случае ошибки `posts` остается пустым массивом
+            setPosts([]);
         }
     };
 
