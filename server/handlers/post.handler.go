@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,6 +56,33 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
+}
+
+func GetPost(w http.ResponseWriter, r *http.Request) {
+	pathParts := strings.Split(r.URL.Path, "/")
+	if len(pathParts) < 3 {
+		http.Error(w, "ID is required", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(pathParts[2])
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+	filter := bson.M{"id": id}
+	var post models.Post
+	err = postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, `{"error": "Post not found"}`, http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(post)
 }
 
 func AddPost(w http.ResponseWriter, r *http.Request) {
@@ -149,6 +177,92 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Post updated successfully"})
+
+}
+
+func PostLike(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		UserEmail string `json:"userEmail"`
+		PostId    int    `json:"postId"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	// Проверить существование пользователя
+	var user models.User
+	err := collection.FindOne(ctx, bson.M{"email": req.UserEmail}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Проверить существование поста
+	var post models.Post
+	err = postsCollection.FindOne(ctx, bson.M{"id": req.PostId}).Decode(&post)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Проверяем, лайкнул ли уже пользователь этот пост
+	var isLiked bool
+	for _, likedUserId := range post.LikedBy {
+		if likedUserId == user.Id {
+			isLiked = true
+			break
+		}
+	}
+
+	if isLiked {
+		// Если уже лайкнуто, убираем лайк
+		update := bson.M{
+			"$inc":  bson.M{"likes": -1},
+			"$pull": bson.M{"likedBy": user.Id},
+		}
+		_, err := postsCollection.UpdateOne(ctx, bson.M{"id": req.PostId}, update)
+		if err != nil {
+			log.Println("Update error:", err)
+			http.Error(w, "Database update error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Like removed"})
+		return
+	}
+
+	// Если пост ещё не лайкнут, добавляем лайк
+	update := bson.M{
+		"$inc":  bson.M{"likes": 1},
+		"$push": bson.M{"likedBy": user.Id},
+	}
+	_, err = postsCollection.UpdateOne(ctx, bson.M{"id": req.PostId}, update)
+	if err != nil {
+		log.Println("Update error:", err)
+		http.Error(w, "Database update error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Post liked"})
 
 }
 

@@ -1,53 +1,70 @@
-import React from "react";
-import Button from "../navigation/button";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { likeLogic } from "../../api";
 
-class Posts extends React.Component {
-    constructor(props){
-        super(props)
-        this.state={
-            data: [],
-            isLoading: true,
-            error: null,
+const Posts = () => {
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Загружаем все посты при первом рендере
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    // Функция загрузки постов из базы
+    const fetchPosts = async () => {
+        try {
+            const response = await axios.get("http://localhost:4000/posts");
+            setData(response.data);
+            setIsLoading(false);
+        } catch (err) {
+            setError(err.message);
+            setIsLoading(false);
         }
-    }
+    };
 
-    componentDidMount(){
-        axios.get("http://localhost:4000/posts")
-        .then((response)=>{
-            this.setState({
-                data: response.data,
-                isLoading: false,
-            })
-        })
-        .catch((err) => {
-            this.setState({
-                error: err.message,
-                loading: false,
-            });
-        })
+    // Функция лайка (теперь берёт данные из базы)
+    const handleLikeLogic = async (postId) => {
+        const userEmail = localStorage.getItem("userEmail");
+        if (!userEmail) {
+            alert("Вы не вошли в аккаунт");
+            return;
+        }
+        try {
+            await likeLogic(userEmail, postId);
 
-    }
-    render() {
-        const { data, loading, error } = this.state;
+            // После успешного лайка запрашиваем обновленные данные конкретного поста
+            const updatedPost = await axios.get(`http://localhost:4000/posts/${postId}`);
 
-        if (loading) return <p>Loading...</p>;
-        if (error) return <p>Error: {error}</p>;
-        return (
-            <div className="posts">
-                {data.map((item) => (
-                    <div key={item.id} className="container-wrap">
-                        <h2 className="title-post">{item.title}</h2>
-                        <div className="item-post" id={item.id}>
-                            <img className="img-post" src={item.link} />
-                            <h3 className="body">{item.body}</h3>
-                            <h3 className="likes">{item.likes}</h3>
-                        </div>
+            // Обновляем только изменённый пост в состоянии
+            setData((prevData) =>
+                prevData.map((post) => (post.id === postId ? updatedPost.data : post))
+            );
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    if (isLoading) return <p>Loading...</p>;
+    if (error) return <p>Error: {error}</p>;
+
+    return (
+        <div className="posts">
+            {data.map((item) => (
+                <div key={item.id} className="container-wrap">
+                    <h2 className="title-post">{item.title}</h2>
+                    <div className="item-post" id={item.id}>
+                        <img className="img-post" src={item.link} alt={item.title} />
+                        <h3 className="body">{item.body}</h3>
+                        <button className="likes" onClick={() => handleLikeLogic(Number(item.id))}>
+                            ❤️ {item.likes}
+                        </button>
                     </div>
-                ))}
-            </div>
-        )
-    }
-}
+                </div>
+            ))}
+        </div>
+    );
+};
 
-export default Posts
+export default Posts;
