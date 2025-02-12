@@ -52,7 +52,7 @@ class Catalog extends React.Component {
             <div className="catalog">
                 {data.map((item) => (
                     <div className="item" id={item.id} key={item.Id}>
-                        <img src={item.image} alt={item.Title} />
+                        <img src={item.Image} alt={item.Title} />
                         <h2 className="title">{item.Title}</h2>
                         <h3 className="price">{item.Price}</h3>
                         <button className="buttonWight" onClick={() => this.handleAddToCart(Number(item.Id))}>add to basket</button>
