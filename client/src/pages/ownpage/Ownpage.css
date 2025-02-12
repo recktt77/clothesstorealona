@@ -136,3 +136,8 @@
 .button-primary:hover {
     background: #d9b995;
 }
+
+img {
+    width: 30px;
+    height: 30px;
+}
