@@ -82,8 +82,10 @@ func main() {
 
 	r.HandleFunc("/posts", handlers.GetAllPosts).Methods("GET", "OPTIONS")
 	r.HandleFunc("/posts", handlers.AddPost).Methods("POST", "OPTIONS")
+	r.HandleFunc("/posts/{id}", handlers.GetPost).Methods("GET", "OPTIONS")
 	r.HandleFunc("/posts/{id}", handlers.UpdatePost).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/posts/{id}", handlers.DeletePost).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/posts/{id}", handlers.PostLike).Methods("POST", "OPTIONS")
 	r.HandleFunc("/user-posts", handlers.GetUserPosts).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/cart/add", handlers.AddToCart).Methods("POST", "OPTIONS")

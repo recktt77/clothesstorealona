@@ -7,4 +7,5 @@ type Post struct {
 	Link      string `json:"link"`
 	Body      string `json:"body"`
 	Likes     int    `json:"likes"`
+	LikedBy   []int  `json:"likedBy"`
 }
