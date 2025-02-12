@@ -27,10 +27,15 @@ class NavBar extends React.Component {
     handleLogoutClick() {
         if (this.props.onLogout) {
             this.props.onLogout();
-        } else {
-            console.error("onLogout is not defined!");
+        }
+        if (this.props.clearBasket) {
+            this.props.clearBasket();
+        }
+        if (this.props.clearPosts) {
+            this.props.clearPosts();
         }
     }
+    
 
     render() {
         return (
