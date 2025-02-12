@@ -31,14 +31,12 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 func main() {
 
-	// Загружаем переменные окружения
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %s", err)
 		return
 	}
 
-	// Подключение к MongoDB
 	database_uri := os.Getenv("MONGO_URI")
 	clientOptions := options.Client().ApplyURI(database_uri)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
@@ -46,19 +44,16 @@ func main() {
 		log.Fatal("Ошибка подключения:", err)
 	}
 
-	// Проверяем подключение
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
 		log.Fatal("Ошибка пинга:", err)
 	}
 
-	// Подключаем коллекции
 	collection := client.Database("Alona").Collection("users")
 	goodsCollection := client.Database("Alona").Collection("goods")
 	postsCollection := client.Database("Alona").Collection("posts")
 	cartCollection := client.Database("Alona").Collection("cart")
 
-	// Передаем коллекции в обработчики
 	handlers.InitCollections(collection, goodsCollection, postsCollection, cartCollection)
 
 	fmt.Println("Успешное подключение к MongoDB Atlas!")
