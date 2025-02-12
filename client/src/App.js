@@ -31,10 +31,11 @@ const App = () => {
     const handleLogout = () => {
         console.log("Logging out...");
         localStorage.removeItem("userEmail");
-        localStorage.removeItem("isAdmin");
+        localStorage.removeItem("isAdmin"); 
 
         setUserEmail("");
         setIsAdmin(false);
+        window.location.reload();
     };
 
     return (
