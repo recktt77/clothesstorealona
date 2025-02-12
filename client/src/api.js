@@ -163,6 +163,22 @@ export const deletePost = async (postId) => {
   }
 };
 
+export const likeLogic = async (userEmail, postId) => {
+  postId = Number(postId);
+  console.log(`Лайкаем пост: userEmail=${userEmail}, postId=${postId}`);
+
+  try {
+    const response = await axios.post(`${API_URL}/posts/${userEmail}`, { userEmail, postId }, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("Ответ от сервера:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Ошибка лайка поста:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Ошибка лайка поста");
+  }
+}
+
 export const addToCart = async (userEmail, goodId) => {
   goodId = Number(goodId); // Преобразуем `goodId` в число
   console.log(`Добавление в корзину: userEmail=${userEmail}, goodId=${goodId}`);
