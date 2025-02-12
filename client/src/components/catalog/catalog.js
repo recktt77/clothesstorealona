@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import { addToCart } from "../../api";
+import "./catalog.css"
 
 class Catalog extends React.Component {
     constructor(props) {
@@ -94,10 +95,10 @@ class Catalog extends React.Component {
         if (error) return <p>Error: {error}</p>;
 
         return (
-            <div className="catalog">
+            <div className="catalogsss">
                 {/* Фильтры */}
                 <div className="filters">
-                    <input
+                    <input className="filter_input"
                         type="text"
                         placeholder="Search by title..."
                         value={searchTerm}
@@ -123,7 +124,7 @@ class Catalog extends React.Component {
                 <div className="catalog-items">
                     {filteredData.map((item) => (
                         <div className="item" id={item.id} key={item.Id}>
-                            <img src={item.Image} alt={item.Title} />
+                            <img className="catalog-image" src={item.Image} alt={item.Title} />
                             <h2 className="title">{item.Title}</h2>
                             <h3 className="price">${item.Price}</h3>
                             <button className="buttonWight" onClick={() => this.handleAddToCart(Number(item.Id))}>
