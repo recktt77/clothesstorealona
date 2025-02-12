@@ -17,18 +17,17 @@ import (
 func GetLastPostID() (int, error) {
 	var lastPost models.Post
 
-	// Находим пользователя с самым большим `id`
 	opts := options.FindOne().SetSort(bson.M{"id": -1})
 	err := postsCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastPost)
 
 	if err == mongo.ErrNoDocuments {
-		return 0, nil // Если коллекция пустая, возвращаем 0
+		return 0, nil
 	}
 	if err != nil {
-		return 0, err // Ошибка запроса
+		return 0, err
 	}
 
-	return lastPost.Id, nil // Возвращаем последний `id`
+	return lastPost.Id, nil
 }
 
 func GetAllPosts(w http.ResponseWriter, r *http.Request) {
