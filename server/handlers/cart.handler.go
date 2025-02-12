@@ -32,7 +32,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	// Проверить существование пользователя
 	var user models.User
 	err := collection.FindOne(ctx, bson.M{"email": req.UserEmail}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
@@ -44,7 +43,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверить существование товара
 	var good models.Good
 	err = goodsCollection.FindOne(ctx, bson.M{"id": req.GoodId}).Decode(&good)
 	if err == mongo.ErrNoDocuments {
@@ -58,7 +56,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	// Проверить, есть ли товар уже в корзине
 	existingFilter := bson.M{"userEmail": req.UserEmail, "goodId": req.GoodId}
 	count, err := cartCollection.CountDocuments(ctx, existingFilter)
 	if err != nil {
@@ -68,7 +65,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if count > 0 {
-		// Обновляем количество товара
 		update := bson.M{"$inc": bson.M{"quantity": 1}}
 		_, err := cartCollection.UpdateOne(ctx, existingFilter, update)
 		if err != nil {
@@ -82,7 +78,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	}
 	
 
-	// Добавить товар в корзину
 	_, err = cartCollection.InsertOne(ctx, bson.M{"userEmail": req.UserEmail, "goodId": req.GoodId, "quantity": 1})
 	if err != nil {
 		log.Println("InsertOne error:", err)
@@ -109,7 +104,6 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Получение корзины для:", userEmail)
 
-	// Получаем товары из корзины
 	cartFilter := bson.M{"userEmail": userEmail}
 	cursor, err := cartCollection.Find(context.TODO(), cartFilter)
 	if err != nil {
@@ -133,7 +127,6 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем детали товаров
 	var itemsWithDetails []map[string]interface{}
 	for _, item := range cartItems {
 		var good models.Good
@@ -143,7 +136,7 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 				"title":    good.Title,
 				"price":    good.Price,
 				"image":    good.Image,
-				"quantity": item.Quantity, // Теперь передаём количество товара
+				"quantity": item.Quantity,
 			}
 			itemsWithDetails = append(itemsWithDetails, itemData)
 		}
@@ -160,7 +153,6 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем параметры из URL
 	vars := mux.Vars(r)
 	goodId, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -168,14 +160,13 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Получаем email пользователя из запроса
+
 	userEmail := r.URL.Query().Get("userEmail")
 	if userEmail == "" {
 		http.Error(w, "User email is required", http.StatusBadRequest)
 		return
 	}
 
-	// Проверяем, есть ли товар в корзине
 	filter := bson.M{"userEmail": userEmail, "goodId": goodId}
 	var cartItem models.Cart
 	err = cartCollection.FindOne(context.TODO(), filter).Decode(&cartItem)
@@ -187,7 +178,6 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Если количество товара > 1, уменьшаем количество
 	if cartItem.Quantity > 1 {
 		update := bson.M{"$inc": bson.M{"quantity": -1}}
 		_, err := cartCollection.UpdateOne(context.TODO(), filter, update)
@@ -200,7 +190,6 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Если количество = 1, удаляем товар из корзины
 	result, err := cartCollection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)

@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react";
 import { getCart, removeFromCart } from "../../api";
 
 const CardBasket = () => {
-    const [items, setItems] = useState([]); // ✅ Гарантируем, что `items` всегда массив
+    const [items, setItems] = useState([]);
     const userEmail = localStorage.getItem("userEmail");
 
     useEffect(() => {
-        if (userEmail) {
+        if (!userEmail) {
+            setItems([]);
+        } else {
             fetchCart();
         }
     }, [userEmail]);
+    
 
     const fetchCart = async () => {
         try {

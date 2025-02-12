@@ -1,5 +1,5 @@
 import React from "react";
-import "./CardBar.css"; // 👈 Import the new styles
+import "./CardBar.css";
 
 const CardBar = () => {
     const userEmail = localStorage.getItem("userEmail") || "User";

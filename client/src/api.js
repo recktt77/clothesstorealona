@@ -180,7 +180,7 @@ export const likeLogic = async (userEmail, postId) => {
 }
 
 export const addToCart = async (userEmail, goodId) => {
-  goodId = Number(goodId); // Преобразуем `goodId` в число
+  goodId = Number(goodId);
   console.log(`Добавление в корзину: userEmail=${userEmail}, goodId=${goodId}`);
 
   try {
