@@ -16,18 +16,17 @@ import (
 func GetLastUserID() (int, error) {
 	var lastUser models.User
 
-	// Находим пользователя с самым большим `id`
 	opts := options.FindOne().SetSort(bson.M{"id": -1})
 	err := collection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastUser)
 
 	if err == mongo.ErrNoDocuments {
-		return 0, nil // Если коллекция пустая, возвращаем 0
+		return 0, nil 
 	}
 	if err != nil {
-		return 0, err // Ошибка запроса
+		return 0, err
 	}
 
-	return lastUser.Id, nil // Возвращаем последний `id`
+	return lastUser.Id, nil 
 }
 
 func UserRegister(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +41,6 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверяем, существует ли пользователь по Email или Number
 	if existingUser, _ := findUserByIdentifier(user.Email); existingUser != nil {
 		http.Error(w, "User with this email already exists", http.StatusConflict)
 		return
@@ -59,7 +57,6 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	user.Id = lastID + 1
 
-	// Назначаем администратора, если это первый пользователь
 	count, err := collection.CountDocuments(context.TODO(), bson.M{})
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -69,7 +66,6 @@ func UserRegister(w http.ResponseWriter, r *http.Request) {
 		user.IsAdmin = true
 	}
 
-	// Вставляем пользователя в MongoDB
 	_, err = collection.InsertOne(context.TODO(), user)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -87,7 +83,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Identifier string `json:"identifier"` // Email или Number
+		Identifier string `json:"identifier"`
 		Password   string `json:"password"`
 	}
 
@@ -190,7 +186,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Извлекаем ID из URL
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) < 3 {
 		http.Error(w, `{"error": "Invalid request path"}`, http.StatusBadRequest)
@@ -215,7 +210,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Декодируем тело запроса
 	var updatedData struct {
 		Email   string `json:"email"`
 		Number  string `json:"number"`
@@ -227,7 +221,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Обновляем данные в MongoDB
 	update := bson.M{"$set": bson.M{
 		"email":   updatedData.Email,
 		"number":  updatedData.Number,
@@ -250,7 +243,6 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Извлекаем email из пути (например, /users/{email})
 	pathParts := strings.Split(r.URL.Path, "/")
 	if len(pathParts) < 3 || pathParts[2] == "" {
 		http.Error(w, `{"error": "Invalid request path"}`, http.StatusBadRequest)
@@ -261,7 +253,6 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	filter := bson.M{"email": email}
 
-	// Удаляем пользователя из MongoDB
 	result, err := collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		http.Error(w, `{"error": "Database error"}`, http.StatusInternalServerError)

@@ -17,18 +17,17 @@ import (
 func GetLastGoodID() (int, error) {
 	var lastGood models.Good
 
-	// Находим пользователя с самым большим `id`
 	opts := options.FindOne().SetSort(bson.M{"id": -1})
 	err := goodsCollection.FindOne(context.TODO(), bson.M{}, opts).Decode(&lastGood)
 
 	if err == mongo.ErrNoDocuments {
-		return 0, nil // Если коллекция пустая, возвращаем 0
+		return 0, nil
 	}
 	if err != nil {
-		return 0, err // Ошибка запроса
+		return 0, err
 	}
 
-	return lastGood.Id, nil // Возвращаем последний `id`
+	return lastGood.Id, nil
 }
 
 func GetAllGoods(w http.ResponseWriter, r *http.Request) {
