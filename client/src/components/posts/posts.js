@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { likeLogic } from "../../api";
+import "./post.css"
 
 const Posts = () => {
     const [data, setData] = useState([]);
@@ -75,7 +76,7 @@ const Posts = () => {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <div className="posts">
+        <div className="postsss">
             {/* Фильтры: поиск и сортировка */}
             <div className="filters">
                 <input
@@ -93,18 +94,20 @@ const Posts = () => {
             </div>
 
             {/* Отображение постов */}
-            {filteredData.map((item) => (
-                <div key={item.id} className="container-wrap">
-                    <h2 className="title-post">{item.title}</h2>
-                    <div className="item-post" id={item.id}>
-                        <img className="img-post" src={item.link} alt={item.title} />
-                        <h3 className="body">{item.body}</h3>
-                        <button className="likes" onClick={() => handleLikeLogic(Number(item.id))}>
-                            ❤️ {item.likes}
-                        </button>
+            <div className="catalog-items">
+                {filteredData.map((item) => (
+                    <div key={item.id} className="container-wrap">
+                        <h2 className="title-post">{item.title}</h2>
+                        <div className="item-post" id={item.id}>
+                            <img className="img-post" src={item.link} alt={item.title} />
+                            <h3 className="body">{item.body}</h3>
+                            <button className="likes" onClick={() => handleLikeLogic(Number(item.id))}>
+                                ❤️ {item.likes}
+                            </button>
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 };
