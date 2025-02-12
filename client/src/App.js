@@ -12,7 +12,7 @@ import ChatAssistant from "./components/aiassistant/ChatAssistant";
 
 const App = () => {
     const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail") || "");
-    const [isAdmin, setIsAdmin] = useState(localStorage.getItem("isAdmin") === "false");
+    const [isAdmin, setIsAdmin] = useState(localStorage.getItem("isAdmin") === "true");
 
     useEffect(() => {
         console.log("App state updated:", userEmail, isAdmin);
