@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { getCart, removeFromCart } from "../../api";
+import { getCart, removeFromCart, processPurchase } from "../../api";
 
 const CardBasket = () => {
     const [items, setItems] = useState([]);
+    const [isProcessing, setIsProcessing] = useState(false);
     const userEmail = localStorage.getItem("userEmail");
 
-    useEffect(() => {
+    const fetchCart = async () => {
         if (!userEmail) {
             setItems([]);
-        } else {
-            fetchCart();
+            return;
         }
-    }, [userEmail]);
-    
-
-    const fetchCart = async () => {
         try {
             const cartItems = await getCart(userEmail);
             console.log("Корзина загружена:", cartItems);
@@ -24,16 +20,39 @@ const CardBasket = () => {
             setItems([]);
         }
     };
-    
+
+    useEffect(() => {
+        fetchCart();
+    }, [userEmail]);
 
     const removeItem = async (id) => {
         try {
             await removeFromCart(userEmail, id);
-            setItems(prevItems => prevItems.filter(item => item.goodId !== id));
+            fetchCart();
         } catch (error) {
             console.error("Ошибка удаления товара:", error);
         }
     };     
+
+    const handlePurchase = async () => {
+        if (!userEmail || items.length === 0) {
+            alert("Your cart is empty!");
+            return;
+        }
+
+        try {
+            setIsProcessing(true);
+            await processPurchase(userEmail);
+            alert("Purchase completed successfully! 🎉");
+            fetchCart();
+        } catch (error) {
+            alert(`Purchase failed: ${error.message}`);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const totalAmount = items.reduce((acc, item) => acc + item.price, 0);
 
     return (
         <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-2xl">
@@ -55,6 +74,7 @@ const CardBasket = () => {
                             <button
                                 onClick={() => removeItem(item.id)}
                                 className="buttonWight bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-300"
+                                disabled={isProcessing}
                             >
                                 ❌ delete
                             </button>
@@ -67,11 +87,19 @@ const CardBasket = () => {
                 <div className="mt-6 text-right">
                     <p className="text-lg font-semibold">💰 overall: 
                         <span className="text-blue-600 ml-2">
-                            {items.reduce((acc, item) => acc + item.price, 0)}₸
+                            {totalAmount}₸
                         </span>
                     </p>
-                    <button className="buttonWight mt-3 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold transition duration-300">
-                        ✅ buy
+                    <button 
+                        onClick={handlePurchase}
+                        disabled={isProcessing}
+                        className={`buttonWight mt-3 ${
+                            isProcessing 
+                                ? 'bg-gray-400' 
+                                : 'bg-green-500 hover:bg-green-600'
+                        } text-white px-6 py-3 rounded-lg font-bold transition duration-300`}
+                    >
+                        {isProcessing ? '⏳ Processing...' : '✅ buy'}
                     </button>
                 </div>
             )}

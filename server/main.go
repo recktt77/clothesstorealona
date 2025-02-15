@@ -19,6 +19,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Max-Age", "3600")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -86,6 +87,8 @@ func main() {
 	r.HandleFunc("/cart/add", handlers.AddToCart).Methods("POST", "OPTIONS")
 	r.HandleFunc("/cart", handlers.GetCart).Methods("GET", "OPTIONS")
 	r.HandleFunc("/cart/{id}", handlers.RemoveFromCart).Methods("DELETE", "OPTIONS")
+
+	r.HandleFunc("/purchase", handlers.ProcessPurchase).Methods("POST", "OPTIONS")
 
 	if err := http.ListenAndServe(":4000", r); err != nil {
 		panic(err)
