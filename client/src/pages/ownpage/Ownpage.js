@@ -8,36 +8,37 @@ import { getUserPosts } from "../../api";
 import "./Ownpage.css"
 
 const Ownpage = () => {
-  const [posts, setPosts] = useState([]);
-  const userEmail = localStorage.getItem("userEmail");
+    const [posts, setPosts] = useState([]);
+    const userEmail = localStorage.getItem("userEmail");
 
-  useEffect(() => {
-      if (userEmail) {
-          fetchUserPosts();
-      }
-  }, [userEmail]);
+    const fetchUserPosts = async () => {
+        if (!userEmail) return;
+        
+        try {
+            const userPosts = await getUserPosts(userEmail);
+            setPosts(userPosts || []);
+        } catch (error) {
+            console.error("Ошибка загрузки постов пользователя:", error);
+            setPosts([]);
+        }
+    };
 
-  const fetchUserPosts = async () => {
-      try {
-          const userPosts = await getUserPosts(userEmail);
-          setPosts(userPosts);
-      } catch (error) {
-          console.error("Ошибка загрузки постов пользователя:", error);
-      }
-  };
+    useEffect(() => {
+        fetchUserPosts();
+    }, [userEmail]);
 
-  return (
-      <div className="ownpage-container">
-          <div className="ownpage-bottom">
-              <div className="ownpage-cart card-container">
-                  <CardBasket />
-              </div>
+    return (
+        <div className="ownpage-container">
+            <div className="ownpage-bottom">
+                <div className="ownpage-cart card-container">
+                    <CardBasket />
+                </div>
 
-              <div className="ownpage-payment card-container">
-                  <Payment />
-              </div>
-          </div>
-          <div className="ownpage-content">
+                <div className="ownpage-payment card-container">
+                    <Payment />
+                </div>
+            </div>
+            <div className="ownpage-content">
                 <div className="ownpage-left">
                     <div className="card-container">
                         <h2 className="section-title">Profile</h2>
@@ -57,8 +58,8 @@ const Ownpage = () => {
                     </div>
                 </div>
             </div>
-      </div>
-  );
+        </div>
+    );
 };
 
 export default Ownpage;
