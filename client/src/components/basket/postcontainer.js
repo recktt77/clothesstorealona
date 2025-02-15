@@ -1,34 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { getUserPosts } from "../../api";
+import React from "react";
 
-const PostContainer = () => {
-    const [posts, setPosts] = useState([]);
-    const userEmail = localStorage.getItem("userEmail");
-
-    useEffect(() => {
-        if (!userEmail) {
-            setPosts([]);
-        } else {
-            fetchPosts();
-        }
-    }, [userEmail]);
-    
-
-    const fetchPosts = async () => {
-        if (!userEmail) {
-            console.error("Ошибка: userEmail не определен!", userEmail);
-            return;
-        }
-
-        try {
-            const userPosts = await getUserPosts(userEmail);
-            setPosts(userPosts || []);
-        } catch (error) {
-            console.error("Ошибка загрузки постов пользователя:", error);
-            setPosts([]);
-        }
-    };
-
+const PostContainer = ({ posts }) => {
     return (
         <div className="bg-white p-4 shadow-md rounded-lg w-full">
             {posts.length === 0 ? <p>There are no posts</p> : (
