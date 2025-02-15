@@ -114,7 +114,7 @@ const API_URL_POSTS = "http://localhost:4000/posts";
 export const getAllPosts = async () => {
   try {
     const response = await axios.get(`${API_URL}/posts`);
-    console.log(response);  
+    console.log(response);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Ошибка получения постов");
@@ -219,6 +219,31 @@ export const removeFromCart = async (userEmail, goodId) => {
   } catch (error) {
     console.error("Ошибка удаления товара:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Ошибка удаления товара из корзины");
+  }
+};
+
+export const processPurchase = async (userEmail) => {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const response = await axios.post(`${API_URL}/purchase`,
+      { userEmail },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log("Purchase completed:", response.data);
+      return response.data;
+    } else {
+      throw new Error("Purchase failed");
+    }
+  } catch (error) {
+    console.error("Purchase error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Purchase failed");
   }
 };
 

@@ -1,23 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { processPurchase } from "../../api";
 
 const Payment = () => {
-    const [cardNumber, setCardNumber] = useState("");
-    const [cvv, setCvv] = useState("");
-    const [expDate, setExpDate] = useState("");
+    const [isProcessing, setIsProcessing] = useState(false);
+    const userEmail = localStorage.getItem("userEmail");
   
-    const handlePayment = () => {
-      alert("payed successfuly!");
+    const handlePayment = async () => {
+        if (!userEmail) {
+            alert("Please log in to make a purchase");
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            await processPurchase(userEmail);
+            alert("Purchase completed successfully!");
+            window.location.reload();
+        } catch (error) {
+            alert("❌ Purchase failed: " + error.message);
+        } finally {
+            setIsProcessing(false);
+        }
     };
   
     return (
       <div className="bg-white p-4 shadow-md rounded-lg w-full">
-        <h2 className="text-lg font-semibold mb-2">Payment</h2>
-        <input type="text" placeholder="cart number" value={cardNumber} onChange={e => setCardNumber(e.target.value)} className="block w-full p-2 mb-2 border rounded" />
-        <input type="text" placeholder="date" value={expDate} onChange={e => setExpDate(e.target.value)} className="block w-full p-2 mb-2 border rounded" />
-        <input type="text" placeholder="CVV" value={cvv} onChange={e => setCvv(e.target.value)} className="block w-full p-2 mb-2 border rounded" />
-        <button onClick={handlePayment} className="buttonWight bg-blue-500 text-white p-2 rounded w-full">Pay</button>
+        <h2 className="text-lg font-semibold mb-4">💳 Payment</h2>
+        <p className="text-sm text-gray-600 mb-4">
+            This is a demo store. No real payment will be processed.
+        </p>
+        <button 
+            onClick={handlePayment} 
+            disabled={isProcessing}
+            className={`buttonWight w-full p-2 rounded text-white font-semibold
+                ${isProcessing ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'}`}
+        >
+            {isProcessing ? '⏳ Processing...' : '✅ Complete Purchase'}
+        </button>
       </div>
     );
-  };
+};
 
-export default Payment
+export default Payment;
