@@ -204,3 +204,31 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Removed from cart"})
 }
+
+func ProcessPurchase(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return;
+	}
+
+	var req struct {
+		UserEmail string `json:"userEmail"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	filter := bson.M{"userEmail": req.UserEmail}
+	_, err := cartCollection.DeleteMany(context.TODO(), filter)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Purchase completed successfully",
+	})
+}
