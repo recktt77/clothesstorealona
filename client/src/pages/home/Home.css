@@ -1,17 +1,16 @@
 
 .main {
-    margin-top: 0px;
+    margin-top: -50px;
 }
 
 .main-page-image {
-    width: 300px;
-    height: 400px;
+    width: 372px;
+    height: 500px;
 }
 
 .images {
     display: flex;
     margin: auto;
-    flex-wrap: wrap;
     flex-direction: row;
     gap: 30px;
 }
