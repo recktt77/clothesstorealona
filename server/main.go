@@ -89,6 +89,9 @@ func main() {
 	r.HandleFunc("/cart/{id}", handlers.RemoveFromCart).Methods("DELETE", "OPTIONS")
 
 	r.HandleFunc("/purchase", handlers.ProcessPurchase).Methods("POST", "OPTIONS")
+	r.HandleFunc("/payment/{email}", handlers.PaymentAddMethod).Methods("POST", "OPTIONS")
+	r.HandleFunc("/payment/{email}", handlers.PaymentGetMethod).Methods("GET", "OPTIONS")
+	r.HandleFunc("/payment/{email}", handlers.PaymentDeleteMethod).Methods("DELETE", "OPTIONS")
 
 	if err := http.ListenAndServe(":4000", r); err != nil {
 		panic(err)
