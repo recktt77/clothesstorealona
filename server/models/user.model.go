@@ -7,4 +7,5 @@ type User struct {
 	Password string `bson:"password"`
 	IsAdmin  bool   `bson:"isAdmin"`
 	Cart     []int  `bson:"cart"`
+	PaymentMethod string `bson:"paymentMethod,omitempty"`
 }
