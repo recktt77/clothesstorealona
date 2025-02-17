@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/recktt77/clothesstorealona/models"
@@ -55,7 +56,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	existingFilter := bson.M{"userEmail": req.UserEmail, "goodId": req.GoodId}
 	count, err := cartCollection.CountDocuments(ctx, existingFilter)
 	if err != nil {
@@ -76,7 +76,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"message": "Updated item quantity in cart"})
 		return
 	}
-	
 
 	_, err = cartCollection.InsertOne(ctx, bson.M{"userEmail": req.UserEmail, "goodId": req.GoodId, "quantity": 1})
 	if err != nil {
@@ -88,7 +87,6 @@ func AddToCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Added to cart"})
 }
-
 
 func GetCart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -146,7 +144,6 @@ func GetCart(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(itemsWithDetails)
 }
 
-
 func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -159,7 +156,6 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid ID format", http.StatusBadRequest)
 		return
 	}
-
 
 	userEmail := r.URL.Query().Get("userEmail")
 	if userEmail == "" {
@@ -208,7 +204,7 @@ func RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 func ProcessPurchase(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return;
+		return
 	}
 
 	var req struct {
@@ -231,4 +227,108 @@ func ProcessPurchase(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Purchase completed successfully",
 	})
+}
+
+func PaymentAddMethod(w http.ResponseWriter, r *http.Request) {
+	type PaymentRequest struct {
+		PaymentMethod string `json:"paymentMethod"`
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	vars := mux.Vars(r)
+	userEmail := vars["email"]
+
+	var req PaymentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	if userEmail == "" || req.PaymentMethod == "" {
+		http.Error(w, "Missing email or paymentMethod", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{"$set": bson.M{"paymentMethod": req.PaymentMethod}}
+	_, err := collection.UpdateOne(ctx, bson.M{"email": userEmail}, update)
+	if err != nil {
+		log.Println("UpdateOne error:", err)
+		http.Error(w, "Database update error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Payment method added successfully"})
+}
+
+func PaymentGetMethod(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	vars := mux.Vars(r)
+	userEmail := vars["email"]
+
+	if userEmail == "" {
+		http.Error(w, "Missing email parameter", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := collection.FindOne(ctx, bson.M{"email": userEmail}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Println("Database error:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"paymentMethod": user.PaymentMethod})
+}
+
+func PaymentDeleteMethod(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	vars := mux.Vars(r)
+	userEmail := vars["email"]
+
+	if userEmail == "" {
+		http.Error(w, "Missing email parameter", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{"$unset": bson.M{"paymentMethod": ""}}
+	_, err := collection.UpdateOne(ctx, bson.M{"email": userEmail}, update)
+	if err != nil {
+		log.Println("UpdateOne error:", err)
+		http.Error(w, "Database update error", http.StatusInternalServerError)
+		return
+	}
+
+	var user models.User
+	collection.FindOne(ctx, bson.M{"email": userEmail}).Decode(&user)
+
+	fmt.Println("Deleted: ", user.PaymentMethod)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Payment method deleted successfully"})
 }
