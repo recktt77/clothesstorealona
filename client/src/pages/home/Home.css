@@ -11,6 +11,7 @@
 .images {
     display: flex;
     margin: auto;
+    flex-wrap: wrap;
     flex-direction: row;
     gap: 30px;
 }
