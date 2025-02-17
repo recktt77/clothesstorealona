@@ -1,6 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getUserPosts } from "../../api";
 
-const PostContainer = ({ posts }) => {
+const PostContainer = () => {
+    const [posts, setPosts] = useState([]);
+    const userEmail = localStorage.getItem("userEmail");
+    useEffect(() => {
+        if(userEmail){
+            fetchUserPosts();
+        } else {
+            setPosts([]);
+        }
+    }, [userEmail]);
+
+
+    const fetchUserPosts = async () => {
+        try {
+            const response = await getUserPosts(userEmail);
+            console.log(response);
+            setPosts(response);
+        } catch (error) {
+            console.error("Error fetching user posts: ", error);
+        }
+    }
+
+    console.log(posts);
     return (
         <div className="bg-white p-4 shadow-md rounded-lg w-full">
             {posts.length === 0 ? <p>There are no posts</p> : (
