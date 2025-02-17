@@ -247,3 +247,40 @@ export const processPurchase = async (userEmail) => {
   }
 };
 
+export const addPaymentMethod = async (userEmail, paymentMethod) => {
+  console.log(`Добавление метода оплаты: userEmail=${userEmail}, paymentMethod=${paymentMethod}`);
+
+  try {
+    const response = await axios.post(`${API_URL}/payment/${userEmail}`, { paymentMethod }, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("Ответ от сервера:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Ошибка добавления в метода оплаты:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Ошибка добавления метода оплаты");
+  }
+};
+
+export const getPaymentMethod = async (userEmail) => {
+  try {
+    const response = await axios.get(`${API_URL}/payment/${userEmail}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("Ответ от сервера (метод оплаты):", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Ошибка получения метода оплаты:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Ошибка получения метода оплаты");
+  }
+};
+
+export const deletePaymentMethod = async (userEmail) => {
+  try {
+    await axios.delete(`${API_URL}/payment/${userEmail}`, { userEmail });
+    return { message: "Метод оплаты удален" };
+  } catch (error) {
+    console.error("Ошибка удаления метода оплаты:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Ошибка удаления метода оплаты");
+  }
+};
